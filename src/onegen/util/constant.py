@@ -1,5 +1,21 @@
+IGNORE_LABEL_ID = -100
+
+
 from enum import Enum, unique
 from .loss import bpr_loss, info_nce_loss
+
+@unique
+class EnumTokenRole(Enum):
+    CTX = "CTX"
+    RET = "RET"
+    GEN = "GEN"
+
+    def __eq__(self, other):
+        if isinstance(other, EnumContrastiveLoss):
+            return self.value == other.value
+        if isinstance(other, str):
+            return self.value == other
+        return False
 
 @unique
 class EnumContrastiveLoss(Enum):

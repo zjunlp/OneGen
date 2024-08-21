@@ -6,7 +6,18 @@ from .util import EnumContrastiveLoss, _print
 # training config
 @dataclass
 class TrainingConfig:
-    pass
+    gradient_checkpointing: bool
+    learning_rate: float
+    optimizer: str
+    save_steps: int
+    report_to: str
+    save_total_limit: int
+    micro_batch_size: int
+    gradient_accumulation_steps: int
+    epochs: int
+    bf16: bool
+    fp16: bool
+    output_dir: str
 
 # db/train config
 @dataclass
@@ -16,6 +27,10 @@ class DataConfig:
     mode: str
     overlength_last_token_id_list: List
     mask_token_id_flag_from_to: List
+
+@dataclass
+class SpecialTokenConfig:
+    pass
 
 # onegen config
 @dataclass

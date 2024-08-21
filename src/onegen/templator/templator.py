@@ -22,6 +22,7 @@ class Templator:
         assistant_template_left:str,
         assistant_template_right:str,
         splitter:str,
+        splitter_after_user:str=None,
         final_input:str = "",
         structured_final_input: List[str] = [""],
         # just for the inference
@@ -36,8 +37,12 @@ class Templator:
                     final_input = f"{final_input}{system_template.format(prompt=message['content'])}{splitter}"
                     structured_final_input[-1] = f"{structured_final_input[-1]}{system_template.format(prompt=message['content'])}{splitter}"
             elif message['role'] == 'user':
-                final_input = f"{final_input}{user_template.format(prompt=message['content'])}{splitter}"
-                structured_final_input[-1] = f"{structured_final_input[-1]}{user_template.format(prompt=message['content'])}{splitter}"
+                if splitter_after_user == None:
+                    final_input = f"{final_input}{user_template.format(prompt=message['content'])}{splitter}"
+                    structured_final_input[-1] = f"{structured_final_input[-1]}{user_template.format(prompt=message['content'])}{splitter}"
+                else:
+                    final_input = f"{final_input}{user_template.format(prompt=message['content'])}{splitter_after_user}"
+                    structured_final_input[-1] = f"{structured_final_input[-1]}{user_template.format(prompt=message['content'])}{splitter_after_user}"
             elif message['role'] == 'assistant':
                 final_input = f"{final_input}{assistant_template.format(prompt=message['content'])}{splitter}"
                 structured_final_input[-1] = f"{structured_final_input[-1]}{assistant_template_left}"
@@ -117,12 +122,19 @@ user input 1 [/INST] model output 1 </s><s>[INST] user input 2 [/INST] model out
     def wrap(cls, messages:List, add_special_token_when_last_role_is_user:bool=False) -> List[str]:
         # multi-round is not supported by official implementation
         default_system_prompt = None
+        # system_template = "<<SYS>>\n{prompt}\n<</SYS>>\n\n"
+        # user_template = " <s>[INST] {prompt} [/INST]"
+        # assistant_template = "{prompt} </s>"   # ` {prompt} </s>`
+        # assistant_template_left = ""           # ` `
+        # assistant_template_right = " </s>"
+        # splitter = ""
         system_template = "<<SYS>>\n{prompt}\n<</SYS>>\n\n"
-        user_template = "<s>[INST] {prompt} [/INST]"
-        assistant_template = " {prompt} </s>"
-        assistant_template_left = " "
-        assistant_template_right = " </s>"
-        splitter = ""
+        user_template = "<s>[INST] {prompt}"
+        assistant_template = "[/INST]{prompt} </s>"    # `[/INST] {prompt} </s>` -> `[/INST]{prompt}</s>`
+        assistant_template_left = "[/INST]"           # `[/INST] ` -> `[/INST]`
+        assistant_template_right = " </s>"             # ` </s>` -> `</s>`
+        splitter = "\n"
+        splitter_after_user = ""
         # if system role is shown in messages, then we first make the system_template; we finally concatenate the system_template and user_prompt to input the user_template
         final_input:str = ""
         structured_final_input: List = [""]
@@ -136,7 +148,7 @@ user input 1 [/INST] model output 1 </s><s>[INST] user input 2 [/INST] model out
             structured_final_input[-1] = final_input
             messages = messages[2:]
         
-        return cls.generate_structured_input(
+        structured_input = cls.generate_structured_input(
             messages=messages,
             system_template=system_template,
             user_template=user_template,
@@ -144,10 +156,12 @@ user input 1 [/INST] model output 1 </s><s>[INST] user input 2 [/INST] model out
             assistant_template_left=assistant_template_left,
             assistant_template_right=assistant_template_right,
             splitter=splitter,
+            splitter_after_user=splitter_after_user,
             final_input=final_input,
             structured_final_input=structured_final_input,
             add_special_token_when_last_role_is_user=add_special_token_when_last_role_is_user
         )
+        return structured_input
 
 class Llama3Templator(Templator):
     # no explicit system prompt
@@ -198,8 +212,8 @@ class MistralTemplator(Templator):
         default_system_prompt = None
         system_template = None
         user_template = "[INST] {prompt}"
-        assistant_template = "[/INST] {prompt}</s>"
-        assistant_template_left = "[/INST] "
+        assistant_template = "[/INST]{prompt}</s>"  # `[/INST] {prompt}</s>`
+        assistant_template_left = "[/INST]"         # `[/INST] `
         assistant_template_right = "</s>"
         splitter = ""
         return cls.generate_structured_input(
@@ -250,6 +264,7 @@ model output 2<end_of_turn>"""
         )
 
 if __name__ == '__main__':
+    
     # TODO: check len(messages) == len(output)
 
     data = [
@@ -271,8 +286,31 @@ if __name__ == '__main__':
     from transformers import AutoTokenizer
     for tokenizer_path, templator, args in tokenizer_check_list:
         print(f"checking {str(templator)} ...")
-        tokenizer = AutoTokenizer.from_pretrained(tokenizer_path)
+        tokenizer = AutoTokenizer.from_pretrained(tokenizer_path, add_prefix_space=False)
+        tokenizer.add_bos_token = False
+        tokenizer.add_eos_token = False
         output_from_tokenizer = tokenizer.apply_chat_template(data, tokenize=False).strip()
-        output_from_templator = "".join(templator.wrap(**args))
-        if output_from_templator != output_from_tokenizer:
-            print(f"tokenizer:\n#{output_from_tokenizer}#\n\ntemplator:\n#{output_from_templator}#")
+        output_list_from_templator = templator.wrap(**args)
+        output_from_templator = "".join(output_list_from_templator)
+        tokenized_from_tokenizer = tokenizer(output_from_templator, return_tensors=None, padding=False, truncation=True, max_length=1024)['input_ids']
+        tokenized_from_templator = []
+        # print(output_from_templator)
+        # print("origin:\n",tokenizer.tokenize(output_from_templator))
+        for segament in output_list_from_templator:
+            if len(segament) > 0:
+                tokenized_from_templator.extend(
+                    tokenizer(segament, return_tensors=None, padding=False, truncation=True, max_length=1024)['input_ids']
+                )
+                # print(tokenizer.tokenize(segament))
+        # input("wait:")
+        # print(output_list_from_templator)
+        # print(tokenized_from_tokenizer)
+        # print(tokenized_from_templator)
+        # input()
+        if len(tokenized_from_templator) != len(tokenized_from_tokenizer):
+            print("not equal!")
+        else:
+            print("equal!")
+        # if output_from_templator != output_from_tokenizer:
+        #     print(f"tokenizer:\n#{output_from_tokenizer}#\n\ntemplator:\n#{output_from_templator}#")
+        # print(f"#{output_from_templator}#")
