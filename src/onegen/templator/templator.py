@@ -1,18 +1,16 @@
 # model template
+
 import sys
 sys.path.append('../')
 from typing import List, Tuple, Any, Dict
-from transformers import AutoTokenizer
-from tokenizer import Tokenizer
 from dataclasses import dataclass
 import warnings
 
 class Templator:
-    def __init__(self, tokenizer: Tokenizer = None):
-        self.tokenizer:Tokenizer = tokenizer
 
+    @classmethod
     def wrap(self, messages:List) -> str:
-        pass
+        raise NotImplementedError("Please implement the function `wrap` for the class Templator.")
     
     @classmethod
     def generate_structured_input(
@@ -59,11 +57,6 @@ class Templator:
         assert final_input == "".join(structured_final_input)
         return structured_final_input
 
-class AutoTemplator:
-    def __init__(self, tokenizer: AutoTokenizer):
-        self.tokenizer = tokenizer
-
-
 class Qwen2Templator(Templator):
     # no explicit system prompt
     """<|im_start|>system
@@ -109,32 +102,7 @@ model output 1<|im_end|>"""
             splitter=splitter,
             add_special_token_when_last_role_is_user=add_special_token_when_last_role_is_user
         )
-        # final_input:str = ""
-        # structured_final_input: List = [""]
-        # for message in messages:
-        #     # Our goal is to get the some part segament that can be concatenated directly and to mask some part segament
-        #     if message['role'] == 'system':
-        #         final_input = f"{final_input}{system_template.format(prompt=message['content'])}{splitter}"
-        #         structured_final_input[-1] = f"{structured_final_input[-1]}{system_template.format(prompt=message['content'])}{splitter}"
-        #     elif message['role'] == 'user':
-        #         final_input = f"{final_input}{user_template.format(prompt=message['content'])}{splitter}"
-        #         structured_final_input[-1] = f"{structured_final_input[-1]}{user_template.format(prompt=message['content'])}{splitter}"
-        #     elif message['role'] == 'assistant':
-        #         final_input = f"{final_input}{assistant_template.format(prompt=message['content'])}{splitter}"
-        #         structured_final_input[-1] = f"{structured_final_input[-1]}{assistant_template_left}"
-        #         structured_final_input.append(message['content']+assistant_template_right)
-        #         structured_final_input.append(f"{splitter}")
-        #     else:
-        #         raise ValueError(f"the role `{message['role']}` is not supported. Our supported role list is `[system, user, assistant]`.")
-        # if len(splitter) > 0:
-        #     # remove the last splitter
-        #     assert final_input.endswith(splitter)
-        #     final_input = final_input[:-len(splitter)]
-        #     assert structured_final_input[-1].endswith(splitter)
-        #     structured_final_input[-1] = structured_final_input[-1][:-len(splitter)]
-        # assert final_input == "".join(structured_final_input)
-        # return structured_final_input
-
+        
 class Llama2Templator(Templator):
     # no explicit system prompt
     """<s>[INST] user input 1 [/INST] model output 1 </s>"""
@@ -180,30 +148,6 @@ user input 1 [/INST] model output 1 </s><s>[INST] user input 2 [/INST] model out
             structured_final_input=structured_final_input,
             add_special_token_when_last_role_is_user=add_special_token_when_last_role_is_user
         )
-
-        # for message in messages:
-        #     # Our goal is to get the some part segament that can be concatenated directly and to mask some part segament
-        #     if message['role'] == 'system':
-        #         final_input = f"{final_input}{system_template.format(prompt=message['content'])}{splitter}"
-        #         structured_final_input[-1] = f"{structured_final_input[-1]}{system_template.format(prompt=message['content'])}{splitter}"
-        #     elif message['role'] == 'user':
-        #         final_input = f"{final_input}{user_template.format(prompt=message['content'])}{splitter}"
-        #         structured_final_input[-1] = f"{structured_final_input[-1]}{user_template.format(prompt=message['content'])}{splitter}"
-        #     elif message['role'] == 'assistant':
-        #         final_input = f"{final_input}{assistant_template.format(prompt=message['content'])}{splitter}"
-        #         structured_final_input[-1] = f"{structured_final_input[-1]}{assistant_template_left}"
-        #         structured_final_input.append(message['content']+assistant_template_right)
-        #         structured_final_input.append(f"{splitter}")
-        #     else:
-        #         raise ValueError(f"the role `{message['role']}` is not supported. Our supported role list is `[system, user, assistant]`.")
-        # if len(splitter) > 0:
-        #     # remove the last splitter
-        #     assert final_input.endswith(splitter)
-        #     final_input = final_input[:-len(splitter)]
-        #     assert structured_final_input[-1].endswith(splitter)
-        #     structured_final_input[-1] = structured_final_input[-1][:-len(splitter)]
-        # assert final_input == "".join(structured_final_input)
-        # return structured_final_input
 
 class Llama3Templator(Templator):
     # no explicit system prompt
@@ -306,7 +250,8 @@ model output 2<end_of_turn>"""
         )
 
 if __name__ == '__main__':
-    # TODO: ATTENTION! Set an argument for inference. Because when inference, you need add special token to let model output.
+    # TODO: check len(messages) == len(output)
+
     data = [
         {'role': 'system', 'content': 'system prompt 1'},
         {'role': 'user', 'content': 'user input 1'},
@@ -331,20 +276,3 @@ if __name__ == '__main__':
         output_from_templator = "".join(templator.wrap(**args))
         if output_from_templator != output_from_tokenizer:
             print(f"tokenizer:\n#{output_from_tokenizer}#\n\ntemplator:\n#{output_from_templator}#")
-
-    # structured_input = Qwen2Templator.wrap(data, force_system_prompt=True)
-    # structured_input = Llama2Templator.wrap(data)
-    # print(structured_input)
-    # print("".join(structured_input))
-    # exit()
-
-    # from transformers import AutoTokenizer
-    # # tokenizer = AutoTokenizer.from_pretrained("/disk/disk_20T/share/Llama-3-8B-Instruct")
-    # # tokenizer = AutoTokenizer.from_pretrained("/disk/disk_20T/share/Qwen2-7B")
-    # tokenizer = AutoTokenizer.from_pretrained("/disk/disk_20T/qiaoshuofei/PLMs/llama-2-7b-chat")
-    # # tokenizer = AutoTokenizer.from_pretrained("mistralai/Mistral-7B-Instruct-v0.3")
-    # # tokenizer = AutoTokenizer.from_pretrained("google/gemma-2-9b-it")
-    
-    # print(tokenizer.apply_chat_template(data, tokenize=False))
-
-    # HF_ENDPOINT=https://hf-mirror.com python templator.py
