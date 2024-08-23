@@ -47,12 +47,23 @@ class AutoDataset(torch.utils.data.Dataset):
         # final data
         self.db_data: Dict = {}
         self.train_data: List = []
+        self.read_db_file(
+            tokenization=True, progress_bar=True,
+            train_on_input=False, check_consistency=True,
+            overwrite=True
+        )
+        self.read_train_file(
+            tokenization=True, progress_bar=True,
+            train_on_input=False, check_consistency=True,
+            overwrite=True
+        )
+        self.check_positive_in_db()
         
-    def __getitem__(self, idx):
-        raise NotImplementedError()
+    def __getitem__(self, idx:int) -> Tuple[int, List[List], List[List]]:
+        return idx, self.train_data[idx]['positive'], self.train_data[idx]['negative']
     
     def __len__(self):
-        raise NotImplementedError()
+        return len(self.train_data)
 
     def read_db_file(
         self, 
@@ -232,7 +243,39 @@ class AutoDataset(torch.utils.data.Dataset):
             _print(f"saving done!")
 
     def check_positive_in_db(self):
-        pass
+        pbar = tqdm(total=len(self.train_data))
+        invalid = 0
+        for item in self.train_data:
+            for pos_list in item['positive']:
+                if len(pos_list) == 0:
+                    continue
+                for pos in pos_list:
+                    doc_uid: str = self.get_doc_id_for(pos)
+                    sent_id: int = self.get_sent_id_for(pos)
+                    if doc_uid not in self.db_data:
+                        invalid += 1
+                    else:
+                        if sent_id >= len(self.db_data[doc_uid]['tokenized']['embedding_index']):
+                            invalid += 1
+            pbar.set_description(str(invalid))
+            pbar.update(1)
+        pbar.close()
+        _print(f"check done and the number of invalid positive examples is `{invalid}`")
+            
+    # custom function for parsing id of positive and negative
+    def get_doc_id_for(self, uid:str) -> str:
+        assert isinstance(uid, str)
+        doc_id = uid
+        if "-" in uid:
+            doc_id = uid.split("-")[0]
+        return doc_id
+
+    def get_sent_id_for(self, uid:str) -> int:
+        sent_id = 0
+        assert isinstance(uid, str)
+        if "-" in uid:
+            sent_id = int(uid.split('-')[1])
+        return sent_id
 
     # custom function for db data
     def get_db_id(self, item:dict) -> str:
