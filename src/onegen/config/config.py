@@ -1,7 +1,9 @@
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import List
 from .util import EnumContrastiveLoss, _print
+from tokenizer import Tokenizer
+# from templator import Templator
 
 # training config
 @dataclass
@@ -22,15 +24,45 @@ class TrainingConfig:
 # db/train config
 @dataclass
 class DataConfig:
-    file_path:str
-    special_token_id_list: List
-    mode: str
-    overlength_last_token_id_list: List
-    mask_token_id_flag_from_to: List
+    file_path: str
+    cache_file_path: str
+    mask_token_from_to: List
+    repr_token: List
+    max_length: int
+    templator
 
-@dataclass
+
 class SpecialTokenConfig:
-    pass
+    def __init__(
+        self,
+        ctx_token_list:List[str],
+        gen_token_list:List[str],
+        ret_token_list:List[str],
+        tokenizer: Tokenizer = None,
+    ):
+        self.ctx_token_list: List[str] = ctx_token_list
+        self.gen_token_list: List[str] = gen_token_list
+        self.ret_token_list: List[str] = ret_token_list
+
+        self.ctx_token_id_list: List[int] = None
+        self.gen_token_id_list: List[int] = None
+        self.ret_toekn_id_list: List[int] = None
+
+        self.tokenizer = tokenizer
+        if self.tokenizer != None:
+            self._update_token_id()
+    
+    def update_tokenizer(self, tokenizer:Tokenizer):
+        self.tokenizer:Tokenizer = tokenizer
+    
+    def _update_token_id(self):
+        for token_list in [self.ctx_token_list, self.gen_token_list, self.ret_token_list]:
+            for token_id_list in [self.ctx_token_id_list, self.gen_token_id_list, self.ret_toekn_id_list]:
+                token_id_list:List[int] = []
+                for token in token_list:
+                    token_id_list.append(self.tokenizer.convert_tokens_to_ids(token))
+
+        
 
 # onegen config
 @dataclass

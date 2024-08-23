@@ -1,4 +1,14 @@
+import sys
+sys.path.append('../')
 import torch
+from config import DataConfig, SpecialTokenConfig
+from tokenizer import Tokenizer
+from util import FileReader, FileWriter
+from util import _print
+from tqdm import tqdm
+import jsonlines
+from templator import DocumentTemplator
+
 
 class BaseDataset(torch.utils.data.Dataset):
     
@@ -18,3 +28,260 @@ class BaseDataset(torch.utils.data.Dataset):
 
     def read_train_file(self):
         raise NotImplementedError()
+
+
+class AutoDataset(torch.utils.data.Dataset):
+
+    def __init__(
+        self,
+        db_file_config: DataConfig,
+        train_file_config: DataConfig,
+        # special_token_config: SpecialTokenConfig,
+        tokenizer: Tokenizer,
+    ):
+        self.tokenizer: Tokenizer = tokenizer
+        self._db_file_config: DataConfig = db_file_config
+        self._train_file_config: DataConfig = train_file_config
+        # self._special_token_config: SpecialTokenConfig = special_token_config
+
+        # final data
+        self.db_data: Dict = {}
+        self.train_data: List = []
+        
+    def __getitem__(self, idx):
+        raise NotImplementedError()
+    
+    def __len__(self):
+        raise NotImplementedError()
+
+    def read_db_file(
+        self, 
+        tokenization:bool, 
+        progress_bar:bool,
+        train_on_input:bool=False,
+        check_consistency:bool=True,
+        overwrite:bool=True,
+    ):
+        """
+        uid: {
+            "content": [],
+            "meta": "",
+            "tokenized": {
+                "input_ids": [],
+                "labels": [],
+                "embedding_index": []
+            } 
+        }
+        """
+        # Prepare
+        templator = self._db_file_config.templator
+        cache_file_path = self._db_file_config.cache_file_path
+        file_path = self._db_file_config.file_path
+        max_length = self._db_file_config.max_length
+        _repr_token:List[str] = self._db_file_config.repr_token
+        _mask_token_from_to:List = self._db_file_config.mask_token_from_to
+        special_token_id_list_for_repr:List = [self.tokenizer.convert_tokens_to_ids(token) for token in _repr_token]
+        mask_token_id_from_to:List = []
+        if len(_mask_token_from_to) != 0:
+            if isinstance(_mask_token_from_to[0], int):
+                assert len(_mask_token_from_to) == 2
+                for token in _mask_token_from_to:
+                    mask_token_id_from_to.append(
+                        self.tokenizer.convert_tokens_to_ids(token)
+                    )
+            else:
+                for token_list in _mask_token_from_to:
+                    mask_token_id_from_to.append(list())
+                    for token in token_list:
+                        mask_token_id_from_to[-1].append(
+                            self.tokenizer.convert_tokens_to_ids(token)
+                        )
+        invalid = 0
+        
+        # load cache if the file is existed
+        if cache_file_path!= None and FileReader.is_existed(cache_file_path):
+            _print(f"loading tokenized db file from `{cache_file_path}`")
+            self.db_data:Dict = FileReader.read_pickle(cache_file_path)
+            _print(f"Example Document:\n{self.tokenizer.decode(self.db_data[list(self.db_data.keys())[0]]['tokenized']['input_ids'])}")
+            return
+        
+        # read file_path and then tokenize it
+        assert FileReader.is_existed(file_path), \
+            f"The database file `{file_path}` is not existed."
+        _print(f"reading database data from `{file_path}` ...")
+        if progress_bar:
+            pbar = tqdm(total=FileReader.get_num_of_line(file_path))
+        else:
+            pbar = tqdm(total=1)
+        with jsonlines.open(file_path, 'r') as reader:
+            for item in reader:
+                pbar.update(1)
+                uid: str = self.get_db_id(item)
+                messages:List[Dict] = self.get_db_messages(item)
+                structured_input:List[str] = templator.wrap(messages)
+                new_item = {
+                    'meta': self.get_db_meta_data(item),
+                    'content': "".join(structured_input)
+                }
+                if tokenization:
+                    new_item['tokenized'] = self.tokenizer.tokenize(
+                        structured_input=structured_input,
+                        max_length=max_length,
+                        special_token_id_list_for_repr=special_token_id_list_for_repr,
+                        mask_token_id_from_to=mask_token_id_from_to,
+                        train_on_input=train_on_input,
+                        check_consistency=check_consistency
+                    )
+                if tokenization and len(new_item['tokenized']['embedding_index']) == 0:
+                    # maybe, due to the truncation
+                    invalid += 1
+                else:
+                    self.db_data[uid] = new_item
+                pbar.set_description(f"invalid: {str(invalid)}")
+                pbar.update(1)
+        pbar.close()
+
+        # cache tokenized data
+        # TODO: multi-cpu scenario
+        if cache_file_path != None:
+            _print(f"start saving tokenized file for database in the file `{cache_file_path}` ...")
+            FileWriter.write_pickle(self.db_data, cache_file_path, overwrite=overwrite)
+            _print(f"saving done!")
+
+    def read_train_file(
+        self, 
+        tokenization:bool, 
+        progress_bar:bool,
+        train_on_input:bool=False,
+        check_consistency:bool=True,
+        overwrite:bool=True,
+    ):
+        # Prepare
+        templator = self._train_file_config.templator
+        cache_file_path = self._train_file_config.cache_file_path
+        file_path = self._train_file_config.file_path
+        max_length = self._train_file_config.max_length
+        _repr_token_list:List[str] = self._train_file_config.repr_token
+        _mask_token_from_to:List = self._train_file_config.mask_token_from_to
+        special_token_id_list_for_repr:List = [self.tokenizer.convert_tokens_to_ids(token) for token in _repr_token_list]
+        mask_token_id_from_to:List = []
+        if len(_mask_token_from_to) != 0:
+            if isinstance(_mask_token_from_to[0], int):
+                assert len(_mask_token_from_to) == 2
+                for token in _mask_token_from_to:
+                    mask_token_id_from_to.append(
+                        self.tokenizer.convert_tokens_to_ids(token)
+                    )
+            else:
+                for token_list in _mask_token_from_to:
+                    mask_token_id_from_to.append(list())
+                    for token in token_list:
+                        mask_token_id_from_to[-1].append(
+                            self.tokenizer.convert_tokens_to_ids(token)
+                        )
+        invalid = 0
+
+        # load cache if the file existed
+        if cache_file_path != None and FileReader.is_existed(cache_file_path):
+            _print(f"loading tokenized train file from `{cache_file_path}`")
+            self.train_data: List = FileReader.read_pickle(cache_file_path)
+            _print(f"Example Case for Training:\n{self.train_data[0]}")
+            return
+        
+        # read file_path and tokenize it
+        assert FileReader.is_existed(file_path), \
+            f"The train file `{file_path}` is not existed."
+        _print(f"reading training data from `{file_path}`")
+        if progress_bar:
+            pbar = tqdm(total=FileReader.get_num_of_line(file_path))
+        else:
+            pbar = tqdm(total=1)
+        with jsonlines.open(file_path, 'r') as reader:
+            for item in reader:
+                pbar.update(1)
+                messages: List[Dict] = self.get_train_messages(item)
+                structured_input: List[str] = templator.wrap(messages)
+                positive_list:List[List[str]] = self.get_train_positive(item, repr_token_list=_repr_token_list)
+                negative_list:List[List[str]] = self.get_train_negative(item, repr_token_list=_repr_token_list)
+                assert len(positive_list) == len(negative_list), \
+                    "Please check the training data."
+                new_item = {
+                    'meta': self.get_train_meta_data(item),
+                    'positive': positive_list,
+                    'negative': negative_list,
+                    'content': "".join(structured_input)
+                }
+                if tokenization:
+                    new_item['tokenized']:Dict = self.tokenizer.tokenize(
+                        structured_input=structured_input,
+                        max_length=max_length,
+                        special_token_id_list_for_repr=special_token_id_list_for_repr,
+                        mask_token_id_from_to=mask_token_id_from_to,
+                        train_on_input=train_on_input,
+                        check_consistency=check_consistency
+                    )
+                    assert len(new_item['tokenized']['embedding_index']) <= len(new_item[positive])
+                self.train_data.append(new_item)
+            pbar.close()
+
+        # cache tokenized data
+        # TODO: multi-cpu scenario
+        if cache_file_path != None:
+            _print(f"start saving tokenized file for database in the file `{cache_file_path}` ...")
+            FileWriter.write_pickle(self.train_data, cache_file_path, overwrite=overwrite)
+            _print(f"saving done!")
+
+    def check_positive_in_db(self):
+        pass
+
+    # custom function for db data
+    def get_db_id(self, item:dict) -> str:
+        return str(item['uid'])
+    
+    def get_db_meta_data(self, item:dict) -> Dict:
+        return item
+    
+    def get_db_messages(self, item:dict) -> List[Dict]:
+        return item['messages']
+    
+    # custom function for train data
+    def get_train_positive(self, item:dict, repr_token_list:List[str]=None) -> List[List[str]]:
+        """repr_token_list is used for check."""
+        # [["1", "2"], ["3"], ["5"]]
+        positive_list:List = []
+        for message in item['messages']:
+            if message['role'] == 'assistant':
+                for positive in message['positive']:
+                    if isinstance(positive, list):
+                        positive_list.append([str(p) for p in positive])
+                    else:
+                        positive_list.append([str(positive)])
+                if repr_token_list != None and len(repr_token_list) > 0:
+                    total = 0
+                    for token in repr_token_list:
+                        total += message['content'].count(token)
+                    if total != len(positive_list):
+                        raise ValueError(f"{total} != {len(positive_list)}. Please make sure the number of special token and the number of positive being same.")
+        return positive_list
+
+    def get_train_negative(self, item:dict, repr_token_list:List[str]=None) -> List[List[str]]:
+        """repr_token_list is used for check."""
+        negative_list:List = []
+        for message in item['messages']:
+            if message['role'] == 'assistant':
+                for negative in message['negative']:
+                    assert isinstance(negative, list)
+                    negative_list.append([str(n) for n in negative])
+                if repr_token_list != None and len(repr_token_list) > 0:
+                    total = 0
+                    for token in repr_token_list:
+                        total += message['content'].count(token)
+                    if total != len(negative_list):
+                        raise ValueError(f"{total} != {len(negative_list)}. Please make sure the number of special token and the number of positive being same.")
+        return negative_list
+
+    def get_train_meta_data(self, item:dict) -> Dict:
+        return item
+    
+    def get_train_messages(self, item:dict) -> List[Dict]:
+        return item['messages']

@@ -179,7 +179,7 @@ user input 1<|eot_id|><|start_header_id|>assistant<|end_header_id|>
 
 model output 1<|eot_id|>"""
     @classmethod
-    def wrap(cls, messages:List, add_special_token_when_last_role_is_user:bool=False) -> str:
+    def wrap(cls, messages:List, add_special_token_when_last_role_is_user:bool=False) -> List[str]:
         default_system_prompt = None
         system_template = "<|start_header_id|>system<|end_header_id|>\n\n{prompt}<|eot_id|>"
         user_template = "<|start_header_id|>user<|end_header_id|>\n\n{prompt}<|eot_id|>"
@@ -208,7 +208,7 @@ class MistralTemplator(Templator):
     # explicit system prompt
     """<s>[INST] user input 1[/INST] model output 1</s>"""
     @classmethod
-    def wrap(cls, messages:List, add_special_token_when_last_role_is_user:bool=False) -> str:
+    def wrap(cls, messages:List, add_special_token_when_last_role_is_user:bool=False) -> List[str]:
         default_system_prompt = None
         system_template = None
         user_template = "[INST] {prompt}"
@@ -242,7 +242,7 @@ model output 2<end_of_turn>"""
     # explicit system prompt
     # system role not supported
     @classmethod
-    def wrap(cls, messages:List) -> str:
+    def wrap(cls, messages:List) -> List[str]:
         # system role is not supported by official
         default_system_prompt = None
         system_template = "<start_of_turn>system\n{prompt}<end_of_turn>"
@@ -263,10 +263,31 @@ model output 2<end_of_turn>"""
             structured_final_input = ["<bos>"],
         )
 
+class DocumentTemplator:
+    @classmethod
+    def wrap(cls, messages:List) -> List[str]:
+        # [user, model, user, model]
+        # Step 1. Check whether the user and assistant interweave
+        for idx, message in enumerate(messages):
+            if idx % 2 == 0:
+                assert message['role'] == 'user'
+            else:
+                assert message['role'] == 'assistant'
+        
+        # Step 2. Construct output for tokenize
+        results = []
+        for idx, message in enumerate(messages):
+            if idx % 2 == 0:
+                results.append(message['content'])
+            else:
+                results.append(message['content'])
+        return results
+
 if __name__ == '__main__':
     
     # TODO: check len(messages) == len(output)
 
+    from transformers import AutoTokenizer
     data = [
         {'role': 'system', 'content': 'system prompt 1'},
         {'role': 'user', 'content': 'user input 1'},
@@ -275,15 +296,19 @@ if __name__ == '__main__':
         {'role': 'assistant', 'content': 'model output 2'},
     ]
 
+
+    tokenizer = AutoTokenizer.from_pretrained("/disk/disk_20T/share/Llama-3-8B-Instruct", add_prefix_space=False)
+    print(Llama3Templator.wrap(data))
+    exit()
+
     tokenizer_check_list = [
         ["/disk/disk_20T/share/Llama-3-8B-Instruct", Llama3Templator, {"messages": data}],
-        ["/disk/disk_20T/share/Qwen2-7B", Qwen2Templator, {"messages": data, "force_system_prompt": True}],
-        ["/disk/disk_20T/qiaoshuofei/PLMs/llama-2-7b-chat", Llama2Templator, {"messages": data}],
-        ["mistralai/Mistral-7B-Instruct-v0.3", MistralTemplator, {"messages": data}],
-        ["google/gemma-2-9b-it", GemmaTemplator, {"messages": data}]
+        # ["/disk/disk_20T/share/Qwen2-7B", Qwen2Templator, {"messages": data, "force_system_prompt": True}],
+        # ["/disk/disk_20T/qiaoshuofei/PLMs/llama-2-7b-chat", Llama2Templator, {"messages": data}],
+        # ["mistralai/Mistral-7B-Instruct-v0.3", MistralTemplator, {"messages": data}],
+        # ["google/gemma-2-9b-it", GemmaTemplator, {"messages": data}]
     ]
 
-    from transformers import AutoTokenizer
     for tokenizer_path, templator, args in tokenizer_check_list:
         print(f"checking {str(templator)} ...")
         tokenizer = AutoTokenizer.from_pretrained(tokenizer_path, add_prefix_space=False)
