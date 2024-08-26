@@ -8,21 +8,7 @@
         "lambda_g": 1
     },
     "special_token_list": {
-        "GEN":{
-            "[No Retrieval]": "a tag indicating no need for retrieval", 
-            "[Retrieval]": "a tag indicating need for retrieval", 
-            "[Continue to Use Evidence]": "a tag indicating continue to use evidence", 
-            "[Irrelevant]": "a tag to denote content irrelevant to the query", 
-            "[Relevant]": "a tag to denote content relevant to the query",
-            "[Utility:1]": "a tag to denote the current generated result is poor", 
-            "[Utility:2]": "a tag to denote the current generated result is fair", 
-            "[Utility:3]": "a tag to denote the current generated result is good", 
-            "[Utility:4]": "a tag to denote the current generated result is great", 
-            "[Utility:5]": "a tag to denote the current generated result is excellent", 
-            "[Fully supported]": "a tag to indicate that the current generated results are all supported by the retrieved documents", 
-            "[Partially supported]": "a tag to indicate that the current generated result has received partial support from the retrieved documents", 
-            "[No support / Contradictory]": "a tag to indicate that the current generated result has not received support from the retrieved documents"
-        },
+        "GEN":{},
         "RET": {
             "[Question Representation]": "infomation of question",
             "[Document Fragment Representation]": "information of document fragment"

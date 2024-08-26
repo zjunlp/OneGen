@@ -11,7 +11,7 @@ from onegen.util import FileReader, _print
 def get_parser():
     parser = argparse.ArgumentParser(description="OneGen")
     parser.add_argument('--local_rank', type=int, description="just used for deepspeed.")
-    parser.add_argument('--config_file', type=str, description="config file path")
+    parser.add_argument('--workflow_file', type=str, description="workflow file path")
     args = parser.parse_args()
     return args
 

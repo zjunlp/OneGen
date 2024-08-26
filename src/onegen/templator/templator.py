@@ -9,7 +9,7 @@ import warnings
 class Templator:
 
     @classmethod
-    def wrap(self, messages:List) -> str:
+    def wrap(self, messages:List, **kwargs) -> str:
         raise NotImplementedError("Please implement the function `wrap` for the class Templator.")
     
     @classmethod
@@ -264,8 +264,9 @@ model output 2<end_of_turn>"""
         )
 
 class DocumentTemplator:
+
     @classmethod
-    def wrap(cls, messages:List) -> List[str]:
+    def wrap(cls, messages:List, **kwargs) -> List[str]:
         # [user, model, user, model]
         # Step 1. Check whether the user and assistant interweave
         for idx, message in enumerate(messages):
@@ -282,6 +283,64 @@ class DocumentTemplator:
             else:
                 results.append(message['content'])
         return results
+
+class SelfRAG_LLama2Templator(Templator):
+
+    @classmethod
+    def wrap(cls, messages:List) -> List[str]:
+        assert len(messages) == 2
+        assert messages[0]['role'] == 'assistant'
+        assert messages[1]['role'] == 'user'
+        system_template = None
+        user_template = "### Instruction:\n{prompt}"
+        assistant_template = "\n\n### Response:\n{prompt}</s>"  
+        assistant_template_left = "\n\n### Response:\n"        
+        assistant_template_right = "</s>"
+        splitter = ""
+        return cls.generate_structured_input(
+            messages=messages,
+            system_template=system_template,
+            user_template=user_template,
+            assistant_template=assistant_template,
+            assistant_template_left=assistant_template_left,
+            assistant_template_right=assistant_template_right,
+            splitter=splitter,
+            final_input = "",
+            structured_final_input = [""],
+        )
+
+class SelfRAG_Llama2_DocTemplator(Templator):
+    # TODO: check!
+    @classmethod
+    def wrap(cls, messages:List) -> List[str]:
+        assert len(messages) == 2
+        assert messages[0]['role'] == 'assistant'
+        assert messages[1]['role'] == 'user'
+        system_template = None
+        user_template = "### Instruction:\n{prompt}"
+        assistant_template = "\n\n### Response:\n{prompt}</s>"  
+        assistant_template_left = "\n\n### Response:\n"        
+        assistant_template_right = "</s>"
+        splitter = ""
+        return cls.generate_structured_input(
+            messages=messages,
+            system_template=system_template,
+            user_template=user_template,
+            assistant_template=assistant_template,
+            assistant_template_left=assistant_template_left,
+            assistant_template_right=assistant_template_right,
+            splitter=splitter,
+            final_input = "",
+            structured_final_input = [""],
+        )
+
+class EntityLinking_Llama2Templator(Templator):
+    @classmethod
+    def wrap(cls, messages:List) -> List[str]:
+        pass
+
+
+
 
 if __name__ == '__main__':
     

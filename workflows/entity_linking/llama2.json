@@ -1,0 +1,59 @@
+{
+    "onegen": {
+        "loss_type": "BPR",
+        "info_nce_temperature": 0.02,
+        "n_pos_per_sent": 1,
+        "n_neg_per_pos": 4,
+        "lambda_r": 1,
+        "lambda_g": 1
+    },
+    "special_token_list": {
+        "GEN":{
+            "[_CONTINUE_]": "continue to output"
+        },
+        "RET": {
+            "[SE]": "description of entity",
+            "[LK]": "information of subject or object"
+        },
+        "CTX": {}
+    },
+    "info-data-db": {
+        "file_path": "",
+        "cache_file_path": "",
+        "repr_token": ["[SE]"],
+        "mask_token_from_to": [],
+        "templator": "DocumentTemplator"
+    },
+    "info-data-train": {
+        "file_path": "",
+        "cache_file_path": "",
+        "repr_token": ["[LK]"],
+        "mask_token_from_to": [],
+        "templator": "SelfRAG_LLama2Templator"
+    },
+    "info-model":{
+        "model_path": "",
+        "tokenizer_path": "",
+        "model_type": "",
+        "max_length": 1300,
+        "padding_side": "right",
+        "padding_label_id": -100,
+        "padding_input_id": 1
+    },
+    "train": {
+        "gradient_checkpointing": true,
+        "learning_rate": 5e-6,
+        "optim": "adamw_torch",
+        "save_steps": 500,
+        "report_to": "tensorboard",
+        "save_total_limit": 10,
+        "micro_batch_size": 5,
+        "gradient_accumulation_steps": 2,
+        "epochs": 3,
+        "bf16": true,
+        "fp16": false,
+        "output_dir": "",
+        "deepspeed": ""
+    },
+    "resume_checkpoint_path": null
+}
