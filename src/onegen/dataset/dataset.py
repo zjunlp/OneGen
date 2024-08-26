@@ -136,7 +136,7 @@ class AutoDataset(torch.utils.data.Dataset):
                     'content': "".join(structured_input)
                 }
                 if tokenization:
-                    new_item['tokenized'] = self.tokenizer.tokenize(
+                    new_item['tokenized'] = self.tokenizer.onegen_tokenize(
                         structured_input=structured_input,
                         max_length=max_length,
                         special_token_id_list_for_repr=special_token_id_list_for_repr,
@@ -224,7 +224,7 @@ class AutoDataset(torch.utils.data.Dataset):
                     'content': "".join(structured_input)
                 }
                 if tokenization:
-                    new_item['tokenized']:Dict = self.tokenizer.tokenize(
+                    new_item['tokenized']:Dict = self.tokenizer.onegen_tokenize(
                         structured_input=structured_input,
                         max_length=max_length,
                         special_token_id_list_for_repr=special_token_id_list_for_repr,

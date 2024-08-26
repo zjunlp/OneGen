@@ -37,7 +37,7 @@ class Tokenizer:
         _print(f"{num_added_tokens} tokens have been added including {special_token_list}.")
         return self.tokenizer
 
-    def tokenize(
+    def onegen_tokenize(
         self,
         structured_input:List[str],
         max_length:int, 
@@ -161,7 +161,7 @@ if __name__ == '__main__':
         "/disk/disk_20T/share/Llama-3-8B-Instruct",
         special_token_list=["[RQ]", "[RD]", "[CON]", "<paragraph>", "</paragraph>"]
     )
-    result = tokenizer.tokenize(
+    result = tokenizer.onegen_tokenize(
         structured_input=[
             '<|begin_of_text|><|start_header_id|>system<|end_header_id|>\n\nsystem prompt 1<|eot_id|><|start_header_id|>user<|end_header_id|>\n\nuser input 1<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\n', 
             '[RQ]<paragraph>123</paragraph>model output 1<|eot_id|>', 

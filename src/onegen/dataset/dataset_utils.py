@@ -6,7 +6,7 @@ def padding_item(item:Dict, padding_side:str, label_padding_id:int, input_paddin
     padding manually.
     args:
         - item: Dict
-            from tokenizer.tokenize()
+            from tokenizer.onegen_tokenize()
         - padding_side: str
             - left
             - right

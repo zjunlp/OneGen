@@ -47,33 +47,53 @@ class PaddingConfig:
 class SpecialTokenConfig:
     def __init__(
         self,
-        ctx_token_list:List[str],
-        gen_token_list:List[str],
-        ret_token_list:List[str],
+        ctx_token_dict:Dict[str, str],
+        gen_token_dict:Dict[str, str],
+        ret_token_dict:Dict[str, str],
         tokenizer: Tokenizer = None,
     ):
-        self.ctx_token_list: List[str] = ctx_token_list
-        self.gen_token_list: List[str] = gen_token_list
-        self.ret_token_list: List[str] = ret_token_list
+        self.description_dict: Dict[str, str] = dict()
+        for _dict in [ctx_token_dict, gen_token_dict, ret_token_dict]:
+            self.description_dict.update(_dict)
+        assert len(self.description_dict) == \
+            len(self.ctx_token_dict) + len(self.gen_token_dict) + len(self.ret_token_dict)
+        
+        self.ctx_token_dict: Dict[str, str] = ctx_token_dict
+        self.gen_token_dict: Dict[str, str] = gen_token_dict
+        self.ret_token_dict: Dict[str, str] = ret_token_dict
+
+        self.ctx_token_list: List[str] = list(ctx_token_dict.keys())
+        self.gen_token_list: List[str] = list(gen_token_dict.keys())
+        self.ret_token_list: List[str] = list(ret_token_dict.keys())
 
         self.ctx_token_id_list: List[int] = None
         self.gen_token_id_list: List[int] = None
         self.ret_toekn_id_list: List[int] = None
-
+        
         self.tokenizer = tokenizer
         if self.tokenizer != None:
             self._update_token_id()
     
     def update_tokenizer(self, tokenizer:Tokenizer):
         self.tokenizer:Tokenizer = tokenizer
+        self._update_token_id()
     
     def _update_token_id(self):
         for token_list in [self.ctx_token_list, self.gen_token_list, self.ret_token_list]:
-            for token_id_list in [self.ctx_token_id_list, self.gen_token_id_list, self.ret_toekn_id_list]:
+            for token_id_list in [self.ctx_token_id_list, self.gen_token_id_list, self.ret_token_id_list]:
                 token_id_list:List[int] = []
                 for token in token_list:
                     token_id_list.append(self.tokenizer.convert_tokens_to_ids(token))
-
+    
+    def get_desciption(self, token:str) -> str:
+        assert token in self.description_dict
+        return self.description_dict[token]
+    
+    def get_all_tokens_id(self) -> List[int]:
+        return [self.tokenizer.convert_tokens_to_ids(token) for token in self.get_all_tokens]
+    
+    def get_all_tokens(self) -> List[str]:
+        list(self.description_dict.keys())
         
 
 # onegen config
