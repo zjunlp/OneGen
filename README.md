@@ -15,3 +15,8 @@
 
 ## Other:
 Multi-GPU tokenization and saving file.
+
+## Usage:
+```bash
+deepspeed examples/main.py --workflow_file workflows/entity_linking/llama2.json
+```
