@@ -8,7 +8,7 @@ from util import _print
 from tqdm import tqdm
 import jsonlines
 from templator import DocumentTemplator
-
+import random
 
 class BaseDataset(torch.utils.data.Dataset):
     
@@ -58,6 +58,7 @@ class AutoDataset(torch.utils.data.Dataset):
             overwrite=True
         )
         self.check_positive_in_db()
+        self.all_uid_list:List[str] = list(self.db_data.keys())
         
     def __getitem__(self, idx:int) -> Tuple[int, List[List], List[List]]:
         return idx, self.train_data[idx]['positive'], self.train_data[idx]['negative']
@@ -276,6 +277,10 @@ class AutoDataset(torch.utils.data.Dataset):
         if "-" in uid:
             sent_id = int(uid.split('-')[1])
         return sent_id
+    
+    def make_db_uid(self, doc_id, sent_id) -> str:
+        # this is the default uid maker
+        return f"{doc_id}-{sent_id}"
 
     # custom function for db data
     def get_db_id(self, item:dict) -> str:
@@ -328,3 +333,31 @@ class AutoDataset(torch.utils.data.Dataset):
     
     def get_train_messages(self, item:dict) -> List[Dict]:
         return item['messages']
+
+    # other functions which will be used in collator
+    def get_tokenized_info_for_train_data(self, idx:int) -> Dict:
+        return self.train_data[idx]['tokenized']
+
+    def get_random_uid_list(self, n:int) -> List[str]:
+        uid_list:List = []
+        random_index = random.sample(
+            range(0, len(self.db_data)), n
+        )
+        for index in random_index:
+            doc_id:str = self.all_uid_list[index]
+            sent_id = random.randint(
+                0, len(self.db_data[doc_id]['tokenized']['embedding_index'])-1
+            )
+            uid_list.append(self.make_db_uid(doc_id, sent_id))
+        return uid_list
+    
+    def get_tokenized_input(self, idx) -> Dict:
+        return self.train_data[idx]['tokenized']
+
+    def get_tokenized_db(self, uid:Union[str, List]) -> Union[Dict, List[Dict]]:
+        if isinstance(uid, str):
+            return self.db_data[uid]['tokenized']
+        elif isinstance(uid, List):
+            return [self.db_data[u]['tokenized'] for u in uid]
+        else:
+            raise ValueError("Invalid uid!")

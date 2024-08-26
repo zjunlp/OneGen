@@ -31,6 +31,18 @@ class DataConfig:
     max_length: int
     templator
 
+class PaddingConfig:
+    def __init__(
+        self,
+        padding_side:str,
+        padding_max_length:int,
+        padding_label_id:int,
+        padding_input_id:int
+    ):
+        self.padding_side: str = padding_side
+        self.padding_max_length: int = padding_max_length
+        self.padding_label_id: int = padding_label_id
+        self.padding_input_id: int = padding_input_id
 
 class SpecialTokenConfig:
     def __init__(
