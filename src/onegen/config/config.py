@@ -1,16 +1,14 @@
 
 from dataclasses import dataclass, field
 from typing import List
-from .util import EnumContrastiveLoss, _print
+from .util import EnumContrastiveLoss, _print, FileReader
 from tokenizer import Tokenizer
-# from templator import Templator
 
-# training config
 @dataclass
 class TrainingConfig:
     gradient_checkpointing: bool
     learning_rate: float
-    optimizer: str
+    optim: str
     save_steps: int
     report_to: str
     save_total_limit: int
@@ -20,6 +18,9 @@ class TrainingConfig:
     bf16: bool
     fp16: bool
     output_dir: str
+
+    def to_dict(self):
+        return vars(self)
 
 # db/train config
 @dataclass
@@ -95,8 +96,6 @@ class SpecialTokenConfig:
     def get_all_tokens(self) -> List[str]:
         list(self.description_dict.keys())
         
-
-# onegen config
 @dataclass
 class OneGenConfig:
     loss_type:str
@@ -105,9 +104,14 @@ class OneGenConfig:
     n_neg_per_pos: int
     lambda_r: float
     lambda_g: float
+    model_path: str
+    tokenizer_path: str
+    model_type: str
 
     def __post_init__(self):
         assert self.loss_type in EnumContrastiveLoss.to_list(),  f"`{self.loss_type}` is not supported. The supported loss functions are in the list `{EnumContrastiveLoss.to_list()}`"
+        if self.tokenizer_path == None:
+            self.tokenizer_path = model_path
         _print(str(self))
     
     def __repr__(self):
@@ -122,3 +126,56 @@ class OneGenConfig:
         else:
             assert False, f"`{self.loss_type}` is not supported. The supported loss functions are in the list `{EnumContrastiveLoss.to_list()}`"
         return common_output
+
+def parse_config(file_name:str) -> Tuple[TrainingConfig, DataConfig, DataConfig, PaddingConfig, SpecialTokenConfig, OneGenConfig, str]:
+    data:dict = FileReader.read_json(file_name=file_name)
+
+    resume_checkpoint_path = data['resume_checkpoint_path']
+    max_length = data['info-model']['max_length']
+    training_config = TrainingConfig(**data['train'])
+
+    data_db_config = DataConfig(
+        file_path=data['info-data-db']['file_path'],
+        cache_file_path=data['info-data-db']['cache_file_path'],
+        mask_token_from_to=data['info-data-db']['mask_token_from_to'],
+        repr_token=data['info-data-db']['repr_token'],
+        max_length=max_length,
+        templator=data['info-data-db']['templator']
+    )
+
+    data_train_config = DataConfig(
+        file_path=data['info-data-train']['file_path'],
+        cache_file_path=data['info-data-train']['cache_file_path'],
+        mask_token_from_to=data['info-data-train']['mask_token_from_to'],
+        repr_token=data['info-data-train']['repr_token'],
+        max_length=max_length,
+        templator=data['info-data-train']['templator']
+    )
+
+    padding_config = PaddingConfig(
+        padding_side=data['info-model']['padding_side'],
+        padding_max_length=max_length,
+        padding_label_id=data['info-model']['padding_label_id'],
+        padding_input_id=data['info-model']['padding_input_id']
+    )
+
+    special_token_config = SpecialTokenConfig(
+        ctx_token_dict=data['special_token_list']['CTX'],
+        gen_token_dict=data['special_token_list']['GEN'],
+        ret_token_dict=data['special_token_list']['RET'],
+        tokenizer=None
+    )
+
+    onegen_config = OneGenConfig(
+        loss_type=data['onegen']['loss_type'],
+        info_nce_loss=data['onegen']['info_nce_temperature'],
+        n_pos_per_sent=data['onegen']['n_pos_per_sent'],
+        n_neg_per_pos=data['onegen']['n_neg_per_pos'],
+        lambda_r=data['onegen']['lambda_r'],
+        lambda_g=data['onegen']['lambda_g'],
+        model_path=data['info-model']['model_path'],
+        tokenizer_path=data['info-model']['tokenizer_path'],
+        model_type=data['onegen']['model_type']
+    )
+
+    return training_config, data_train_config, data_db_config, padding_config, special_token_config, onegen_config, resume_checkpoint_path

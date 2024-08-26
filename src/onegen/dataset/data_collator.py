@@ -5,16 +5,6 @@ from typing import Tuple, Dict, List
 import random
 import torch
 
-class BaseDataCollator:
-    def __init__(self):
-        raise NotImplementedError()
-
-    def __call__(self):
-        raise NotImplementedError()
-
-    def random_select(self):
-        pass
-
 class AutoDataCollator:
     def __init__(
         self,

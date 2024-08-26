@@ -102,3 +102,6 @@ class OneGenTrainer(Trainer):
             self.accelerator.backward(loss)
 
         return loss.detach() / self.args.gradient_accumulation_steps
+
+if __name__ == '__main__':
+    pass
