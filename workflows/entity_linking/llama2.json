@@ -18,15 +18,15 @@
         "CTX": {}
     },
     "info-data-db": {
-        "file_path": "",
-        "cache_file_path": "",
+        "file_path": "../../data/entity_linking/train.jsonl",
+        "cache_file_path": "../../data/entity_linking/train.cache",
         "repr_token": ["[SE]"],
         "mask_token_from_to": [],
         "templator": "DocumentTemplator"
     },
     "info-data-train": {
-        "file_path": "",
-        "cache_file_path": "",
+        "file_path": "../../data/entity_linking/db.jsonl",
+        "cache_file_path": "../../data/entity_linking/db.cache",
         "repr_token": ["[LK]"],
         "mask_token_from_to": [],
         "templator": "SelfRAG_LLama2Templator"
@@ -34,11 +34,11 @@
     "info-model":{
         "model_path": "",
         "tokenizer_path": "",
-        "model_type": "",
+        "model_type": "llama2",
         "max_length": 1300,
         "padding_side": "right",
         "padding_label_id": -100,
-        "padding_input_id": 1
+        "padding_input_id": 2
     },
     "train": {
         "gradient_checkpointing": true,
@@ -52,8 +52,8 @@
         "epochs": 3,
         "bf16": true,
         "fp16": false,
-        "output_dir": "",
-        "deepspeed": ""
+        "output_dir": "../../output",
+        "deepspeed": "../../deepspeed_cfg/ds_z3_config.json"
     },
     "resume_checkpoint_path": null
 }

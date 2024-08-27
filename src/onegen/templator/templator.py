@@ -337,6 +337,7 @@ class SelfRAG_Llama2_DocTemplator(Templator):
 class EntityLinking_Llama2Templator(Templator):
     @classmethod
     def wrap(cls, messages:List) -> List[str]:
+        # [INST] [/INST]
         pass
 
 

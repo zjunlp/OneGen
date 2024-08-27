@@ -11,7 +11,7 @@ from onegen.util import FileReader, _print
 def get_parser():
     parser = argparse.ArgumentParser(description="OneGen")
     parser.add_argument('--local_rank', type=int, description="just used for deepspeed.")
-    parser.add_argument('--workflow_file', type=str, description="workflow file path")
+    parser.add_argument('--workflow', type=str, description="workflow file path")
     args = parser.parse_args()
     return args
 
@@ -22,7 +22,7 @@ def main():
     # Step 1. Load config
     training_config, data_train_config, data_db_config, \
         padding_config, special_token_config, onegen_config, resume_checkpoint_path = \
-            parse_config(args.config_file)
+            parse_config(args.workflow)
     
     # Step 2. Load tokenizer
     tokenizer = Tokenizer(

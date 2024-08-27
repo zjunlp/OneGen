@@ -5,6 +5,7 @@ import jsonlines
 import os
 import pickle
 from tqdm import tqdm
+import torch.distributed as dist
 
 def _print(message:Any):
     print(f"[{time.ctime()}] {message}")
@@ -14,26 +15,32 @@ class FileWriter:
     def write_jsonl(cls, data:List[Dict], file_name:str, overwrite:bool=False):
         if FileReader.is_existed(file_name) == True and not overwrite:
             raise ValueError(f"The file `{file_name}` has existed. Please set the other `file_name` or make the `overwrite` True.")
-        with jsonlines.open(file_name, 'w') as writer:
-            pbar = tqdm(total=len(data))
-            for item in data:
-                pbar.update(1)
-                writer.write(item)
-            pbar.close()
+        if dist.get_rank() == 0:
+            with jsonlines.open(file_name, 'w') as writer:
+                pbar = tqdm(total=len(data))
+                for item in data:
+                    pbar.update(1)
+                    writer.write(item)
+                pbar.close()
+        dist.barrier()
 
     @classmethod
     def write_json(cls, data:dict, file_name:str, overwrite:bool=False):
         if FileReader.is_existed(file_name) == True and not overwrite:
             raise ValueError(f"The file `{file_name}` has existed. Please set the other `file_name` or make the `overwrite` True.")
-        with open(file_name, 'w') as writer:
-            json.dump(data, writer)
+        if dist.get_rank() == 0:
+            with open(file_name, 'w') as writer:
+                json.dump(data, writer)
+        dist.barrier()
 
     @classmethod
     def write_pickle(cls, data, file_name:str, overwrite:bool=False):
         if FileReader.is_existed(file_name) == True and not overwrite:
             raise ValueError(f"The file `{file_name}` has existed. Please set the other `file_name` or make the `overwrite` True.")
-        with open(file_name, 'wb') as writer:
-            pickle.dump(data, writer)
+        if dist.get_rank() == 0:
+            with open(file_name, 'wb') as writer:
+                pickle.dump(data, writer)
+        dist.barrier()
 
 class FileReader:
     @classmethod
