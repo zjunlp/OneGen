@@ -1,6 +1,6 @@
 from .dataset import AutoDataset
-from config import OneGenConfig
 from .dataset_utils import padding_item
+from onegen.config import OneGenConfig, PaddingConfig
 from typing import Tuple, Dict, List
 import random
 import torch
@@ -189,7 +189,7 @@ class AutoDataCollator:
         #         There are no overlap between P&N, N&N.
         # ====================================================
         flatten_pos_uid:List[str] = []
-        for pos_uid_list in anchor['selected_pos_uid']:
+        for pos_uid_list in anchor_info['selected_pos_uid']:
             # batch -> instance
             for pos_uid in pos_uid_list:
                 # instance -> positive_list
@@ -238,7 +238,7 @@ class AutoDataCollator:
         # ====================================================     
         # Handle the hybrid case  
         # 0-1, 0-2, so we just add 0.
-        for i in range(len(anchor['id_in_dataset'])):
+        for i in range(len(anchor_info['id_in_dataset'])):
             idx_in_dataset = anchor_info['id_in_dataset'][i]
             anchor_info['meta_info'].append(
                 self.dataset.get_tokenized_input(idx_in_dataset)
@@ -286,7 +286,7 @@ class AutoDataCollator:
             for pos_id in item:
                 pos_doc_id_set.add(self.dataset.get_doc_id_for(pos_id))
         negative_start_row_index = len(instances) + len(pos_doc_id_set)
-        assert len(pos_doc_id_set) == len(positive_info['info_meta_doc_id'])
+        assert len(pos_doc_id_set) == len(positive_info['index_meta_doc_id'])
 
         # Generation
         for idx, tokenized_item in enumerate(generation_info['meta_info']):
@@ -372,7 +372,7 @@ class AutoDataCollator:
         for idx_anchor in range(len(negative_info['loc_id'])):
             for idx_pos in range(len(negative_info['loc_id'][idx_anchor])):
                 for idx_neg in range(len(negative_info['loc_id'][idx_anchor][idx_pos])):
-                    doc_id, sent_id = negative_info['loc_id'][idx_anchor][idx_neg]
+                    doc_id, sent_id = negative_info['loc_id'][idx_anchor][idx_pos][idx_neg]
                     negative_info['row_index'].append(
                         negative_info['index_meta_doc_id'].index(doc_id) + negative_start_row_index
                     )
@@ -384,6 +384,7 @@ class AutoDataCollator:
         # Step 5. Packing and Return
         # ====================================================  
         assert len(anchor_info['input_ids']) + len(generation_info['input_ids']) == len(instances)
+        
         return dict(
             input_ids=torch.as_tensor(
                 generation_info['input_ids'] + anchor_info['input_ids'] + positive_info['input_ids'] + negative_info['input_ids']
@@ -393,7 +394,7 @@ class AutoDataCollator:
             ),
             embedding_index=(
                 torch.as_tensor(anchor_info['row_index'] + positive_info['row_index'] + negative_info['row_index']),
-                torch.as_tensor(anchor_info['column_index'] + positive_info['column_index'], negative_info['column_index'])
+                torch.as_tensor(anchor_info['column_index'] + positive_info['column_index'] + negative_info['column_index'])
             ),
             embedding_index_split_flag=[
                 len(anchor_info['row_index']),

@@ -1,3 +1,6 @@
+import sys
+sys.path.append('src/')
+
 import torch
 import argparse
 from transformers import TrainingArguments
@@ -10,12 +13,14 @@ from onegen.util import FileReader, _print
 
 def get_parser():
     parser = argparse.ArgumentParser(description="OneGen")
-    parser.add_argument('--local_rank', type=int, description="just used for deepspeed.")
-    parser.add_argument('--workflow', type=str, description="workflow file path")
+    parser.add_argument('--local_rank', type=int, help="just used for deepspeed.")
+    parser.add_argument('--workflow', type=str, help="workflow file path")
     args = parser.parse_args()
     return args
 
 def main():
+    import deepspeed
+    deepspeed.init_distributed()
     args = get_parser()
     training_config:TrainingConfig
 
@@ -38,7 +43,7 @@ def main():
     )
     model.load_train_config(onegen_config=onegen_config)
     model.resize_and_initialize(tokenizer=tokenizer, special_token_config=special_token_config)
-
+    
     # Step 4. Load dataset and data_collator
     train_dataset = AutoDataset(
         db_file_config=data_db_config,
@@ -54,11 +59,11 @@ def main():
     trainer = OneGenTrainer(
         model=model,
         train_dataset=train_dataset,
-        data_collator=data_collator,
         args=TrainingArguments(
             local_rank=args.local_rank,
             **training_config.to_dict()
-        )
+        ),
+        data_collator=data_collator,
     )
     trainer.add_callback(OneGenTensorBoardCallback())
 
@@ -68,9 +73,11 @@ def main():
             resume_checkpoint_path = None
         else:
             _print(f"resume from checkpoint `{resume_checkpoint_path}`")
-    trainer.train(resume_from_checkpoint=resume_checkpoint_path)
+    trainer.train() # resume_from_checkpoint=resume_checkpoint_path
     trainer.save_model(training_config.output_dir)
 
 
 if __name__ == '__main__':
     main()
+    # deepspeed main.py --workflow workflows/entity_linking/llama2.json
+    # deepspeed main.py --workflow workflows/self_rag/llama2.json

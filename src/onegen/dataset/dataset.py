@@ -1,14 +1,15 @@
 import sys
 sys.path.append('../')
 import torch
-from config import DataConfig, SpecialTokenConfig
-from tokenizer import Tokenizer
-from util import FileReader, FileWriter
-from util import _print
+from onegen.config import DataConfig, SpecialTokenConfig
+from onegen.tokenizer import Tokenizer
+from onegen.util import FileReader, FileWriter
+from onegen.util import _print
 from tqdm import tqdm
 import jsonlines
-from templator import DocumentTemplator
+from onegen.templator import DocumentTemplator
 import random
+from typing import *
 
 class AutoDataset(torch.utils.data.Dataset):
 
@@ -74,7 +75,7 @@ class AutoDataset(torch.utils.data.Dataset):
         _mask_token_from_to:List = self._db_file_config.mask_token_from_to
         special_token_id_list_for_repr:List = [self.tokenizer.convert_tokens_to_ids(token) for token in _repr_token]
         mask_token_id_from_to:List = []
-        if len(_mask_token_from_to) != 0:
+        if _mask_token_from_to != None and len(_mask_token_from_to) != 0:
             if isinstance(_mask_token_from_to[0], int):
                 assert len(_mask_token_from_to) == 2
                 for token in _mask_token_from_to:
@@ -157,8 +158,8 @@ class AutoDataset(torch.utils.data.Dataset):
         _mask_token_from_to:List = self._train_file_config.mask_token_from_to
         special_token_id_list_for_repr:List = [self.tokenizer.convert_tokens_to_ids(token) for token in _repr_token_list]
         mask_token_id_from_to:List = []
-        if len(_mask_token_from_to) != 0:
-            if isinstance(_mask_token_from_to[0], int):
+        if _mask_token_from_to != None and len(_mask_token_from_to) != 0:
+            if not isinstance(_mask_token_from_to[0], list):
                 assert len(_mask_token_from_to) == 2
                 for token in _mask_token_from_to:
                     mask_token_id_from_to.append(
@@ -212,12 +213,11 @@ class AutoDataset(torch.utils.data.Dataset):
                         train_on_input=train_on_input,
                         check_consistency=check_consistency
                     )
-                    assert len(new_item['tokenized']['embedding_index']) <= len(new_item[positive])
+                    assert len(new_item['tokenized']['embedding_index']) <= len(new_item['positive'])
                 self.train_data.append(new_item)
             pbar.close()
 
         # cache tokenized data
-        # TODO: multi-cpu scenario
         if cache_file_path != None:
             _print(f"start saving tokenized file for database in the file `{cache_file_path}` ...")
             FileWriter.write_pickle(self.train_data, cache_file_path, overwrite=overwrite)
@@ -231,13 +231,16 @@ class AutoDataset(torch.utils.data.Dataset):
                 if len(pos_list) == 0:
                     continue
                 for pos in pos_list:
-                    doc_uid: str = self.get_doc_id_for(pos)
-                    sent_id: int = self.get_sent_id_for(pos)
-                    if doc_uid not in self.db_data:
+                    if pos == None:
                         invalid += 1
                     else:
-                        if sent_id >= len(self.db_data[doc_uid]['tokenized']['embedding_index']):
+                        doc_uid: str = self.get_doc_id_for(pos)
+                        sent_id: int = self.get_sent_id_for(pos)
+                        if doc_uid not in self.db_data:
                             invalid += 1
+                        else:
+                            if sent_id >= len(self.db_data[doc_uid]['tokenized']['embedding_index']):
+                                invalid += 1
             pbar.set_description(str(invalid))
             pbar.update(1)
         pbar.close()
@@ -283,7 +286,10 @@ class AutoDataset(torch.utils.data.Dataset):
                     if isinstance(positive, list):
                         positive_list.append([str(p) for p in positive])
                     else:
-                        positive_list.append([str(positive)])
+                        if positive == None:
+                            positive_list.append([])
+                        else:
+                            positive_list.append([str(positive)])
                 if repr_token_list != None and len(repr_token_list) > 0:
                     total = 0
                     for token in repr_token_list:
@@ -299,7 +305,7 @@ class AutoDataset(torch.utils.data.Dataset):
             if message['role'] == 'assistant':
                 for negative in message['negative']:
                     assert isinstance(negative, list)
-                    negative_list.append([str(n) for n in negative])
+                    negative_list.append([str(n) if n != None else None for n in negative])
                 if repr_token_list != None and len(repr_token_list) > 0:
                     total = 0
                     for token in repr_token_list:

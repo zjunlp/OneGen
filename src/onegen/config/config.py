@@ -1,23 +1,30 @@
-
+import sys
+sys.path.append('../')
 from dataclasses import dataclass, field
 from typing import List
-from .util import EnumContrastiveLoss, _print, FileReader
-from tokenizer import Tokenizer
+from onegen.util import EnumContrastiveLoss, _print, FileReader
+from onegen.tokenizer import Tokenizer
+from onegen.templator import *
+from typing import List, Dict, Tuple, Any
 
 @dataclass
 class TrainingConfig:
     gradient_checkpointing: bool
+    num_train_epochs: int
     learning_rate: float
+    bf16: bool
+    logging_steps:int
+    do_eval:bool
     optim: str
     save_steps: int
-    report_to: str
-    save_total_limit: int
-    micro_batch_size: int
-    gradient_accumulation_steps: int
-    epochs: int
-    bf16: bool
-    fp16: bool
     output_dir: str
+    load_best_model_at_end: bool
+    deepspeed: str
+    save_total_limit: int
+    report_to: str
+    per_device_train_batch_size: int
+    gradient_accumulation_steps: int
+    fp16: bool
 
     def to_dict(self):
         return vars(self)
@@ -30,7 +37,12 @@ class DataConfig:
     mask_token_from_to: List
     repr_token: List
     max_length: int
-    templator
+    templator: Any
+
+    def __post_init__(self):
+        if isinstance(self.mask_token_from_to, list):
+            if len(self.mask_token_from_to) == 0:
+                self.mask_token_from_to = None
 
 class PaddingConfig:
     def __init__(
@@ -53,23 +65,23 @@ class SpecialTokenConfig:
         ret_token_dict:Dict[str, str],
         tokenizer: Tokenizer = None,
     ):
+        self.ctx_token_dict: Dict[str, str] = ctx_token_dict
+        self.gen_token_dict: Dict[str, str] = gen_token_dict
+        self.ret_token_dict: Dict[str, str] = ret_token_dict
+
         self.description_dict: Dict[str, str] = dict()
         for _dict in [ctx_token_dict, gen_token_dict, ret_token_dict]:
             self.description_dict.update(_dict)
         assert len(self.description_dict) == \
             len(self.ctx_token_dict) + len(self.gen_token_dict) + len(self.ret_token_dict)
         
-        self.ctx_token_dict: Dict[str, str] = ctx_token_dict
-        self.gen_token_dict: Dict[str, str] = gen_token_dict
-        self.ret_token_dict: Dict[str, str] = ret_token_dict
-
         self.ctx_token_list: List[str] = list(ctx_token_dict.keys())
         self.gen_token_list: List[str] = list(gen_token_dict.keys())
         self.ret_token_list: List[str] = list(ret_token_dict.keys())
 
         self.ctx_token_id_list: List[int] = None
         self.gen_token_id_list: List[int] = None
-        self.ret_toekn_id_list: List[int] = None
+        self.ret_token_id_list: List[int] = None
         
         self.tokenizer = tokenizer
         if self.tokenizer != None:
@@ -94,7 +106,7 @@ class SpecialTokenConfig:
         return [self.tokenizer.convert_tokens_to_ids(token) for token in self.get_all_tokens]
     
     def get_all_tokens(self) -> List[str]:
-        list(self.description_dict.keys())
+        return list(self.description_dict.keys())
         
 @dataclass
 class OneGenConfig:
@@ -140,7 +152,7 @@ def parse_config(file_name:str) -> Tuple[TrainingConfig, DataConfig, DataConfig,
         mask_token_from_to=data['info-data-db']['mask_token_from_to'],
         repr_token=data['info-data-db']['repr_token'],
         max_length=max_length,
-        templator=data['info-data-db']['templator']
+        templator=eval(data['info-data-db']['templator'])
     )
 
     data_train_config = DataConfig(
@@ -149,7 +161,7 @@ def parse_config(file_name:str) -> Tuple[TrainingConfig, DataConfig, DataConfig,
         mask_token_from_to=data['info-data-train']['mask_token_from_to'],
         repr_token=data['info-data-train']['repr_token'],
         max_length=max_length,
-        templator=data['info-data-train']['templator']
+        templator=eval(data['info-data-train']['templator'])
     )
 
     padding_config = PaddingConfig(
@@ -168,14 +180,14 @@ def parse_config(file_name:str) -> Tuple[TrainingConfig, DataConfig, DataConfig,
 
     onegen_config = OneGenConfig(
         loss_type=data['onegen']['loss_type'],
-        info_nce_loss=data['onegen']['info_nce_temperature'],
+        info_nce_temperature=data['onegen']['info_nce_temperature'],
         n_pos_per_sent=data['onegen']['n_pos_per_sent'],
         n_neg_per_pos=data['onegen']['n_neg_per_pos'],
         lambda_r=data['onegen']['lambda_r'],
         lambda_g=data['onegen']['lambda_g'],
         model_path=data['info-model']['model_path'],
         tokenizer_path=data['info-model']['tokenizer_path'],
-        model_type=data['onegen']['model_type']
+        model_type=data['info-model']['model_type']
     )
 
     return training_config, data_train_config, data_db_config, padding_config, special_token_config, onegen_config, resume_checkpoint_path

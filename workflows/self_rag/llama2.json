@@ -3,7 +3,7 @@
         "loss_type": "BPR",
         "info_nce_temperature": 0.02,
         "n_pos_per_sent": 1,
-        "n_neg_per_pos": 3,
+        "n_neg_per_pos": 2,
         "lambda_r": 1,
         "lambda_g": 1
     },
@@ -33,22 +33,22 @@
         }
     },
     "info-data-db": {
-        "file_path": "",
-        "cache_file_path": "",
+        "file_path": "./data/self_rag/db.jsonl",
+        "cache_file_path": "./data/self_rag/db.cache",
         "repr_token": ["[Document Fragment Representation]"],
         "mask_token_from_to": [],
         "templator": "DocumentTemplator"
     },
     "info-data-train": {
-        "file_path": "",
-        "cache_file_path": "",
+        "file_path": "./data/self_rag/train.jsonl",
+        "cache_file_path": "./data/self_rag/train.cache",
         "repr_token": ["[Question Representation]"],
-        "mask_token_from_to": [["<paragraph>", "</paragraph"]],
-        "templator": "SelfRAG_LLama2Templator"
+        "mask_token_from_to": [["<paragraph>", "</paragraph>"]],
+        "templator": "DocumentTemplator"
     },
     "info-model":{
-        "model_path": "",
-        "tokenizer_path": "",
+        "model_path": "/gruntdata/event_graph/shanghua.zjt/plm/llama-2-7b-chat-hf",
+        "tokenizer_path": "/gruntdata/event_graph/shanghua.zjt/plm/llama-2-7b-chat-hf",
         "model_type": "llama2",
         "max_length": 2048,
         "padding_side": "right",
@@ -62,13 +62,16 @@
         "save_steps": 500,
         "report_to": "tensorboard",
         "save_total_limit": 10,
-        "micro_batch_size": 3,
+        "do_eval": false,
+        "logging_steps": 1,
+        "per_device_train_batch_size": 3,
         "gradient_accumulation_steps": 4,
-        "epochs": 3,
+        "load_best_model_at_end": false,
+        "num_train_epochs": 3,
         "bf16": true,
         "fp16": false,
-        "output_dir": "../../output",
-        "deepspeed": "../../deepspeed_cfg/ds_z3_config.json"
+        "output_dir": "./output/self_rag/llama2",
+        "deepspeed": "./deepspeed_cfg/ds_z3_config.json"
     },
     "resume_checkpoint_path": null
 }

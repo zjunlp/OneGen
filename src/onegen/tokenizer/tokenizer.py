@@ -2,8 +2,8 @@ import sys
 sys.path.append('../')
 from transformers import AutoTokenizer
 from typing import List, Dict
-from util import _print
-from util.constant import IGNORE_LABEL_ID
+from onegen.util import _print
+from onegen.util.constant import IGNORE_LABEL_ID
 from copy import deepcopy
 
 class Tokenizer:
@@ -85,7 +85,7 @@ class Tokenizer:
             for input_ids in tokenized_input_id_list:
                 tokenized_whole_input_from_segement.extend(input_ids)
             assert tokenized_whole_input_from_segement == tokenized_whole_input, \
-                f"consistency check failed.\n{tokenized_whole_input_from_segement}\n{tokenized_whole_input}"
+                f"consistency check failed.\n{tokenized_whole_input_from_segement}\n{tokenized_whole_input}\n{whole_input}\n{structured_input}"
             _print("consistency check successfully.")
 
         # Step 2. create default labels
@@ -97,7 +97,7 @@ class Tokenizer:
                     tokenized_label_list[i] = [IGNORE_LABEL_ID] * len(tokenized_label_list[i])
         
         # Step 3. adjust labels' value according to the `mask_token_id_from_to`
-        if mask_token_id_from_to != None:
+        if mask_token_id_from_to != None and len(mask_token_id_from_to) != 0:
             if isinstance(mask_token_id_from_to[0], int):
                 assert len(mask_token_id_from_to) == 2
                 mask_token_id_from_to:List[List[int]] = [mask_token_id_from_to]
@@ -155,6 +155,9 @@ class Tokenizer:
 
     def __getattr__(self, name):
         return getattr(self.tokenizer, name)
+
+    def __len__(self):
+        return len(self.tokenizer)
 
 if __name__ == '__main__':
     tokenizer = Tokenizer(

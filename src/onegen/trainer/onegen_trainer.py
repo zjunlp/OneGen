@@ -4,6 +4,8 @@ from transformers.trainer_pt_utils import distributed_concat
 from transformers.integrations import TensorBoardCallback, rewrite_logs
 from transformers import Trainer
 import torch.nn as nn
+from typing import *
+import torch
 
 class OneGenTensorBoardCallback(TensorBoardCallback):
     def on_log(self, args, state, control, logs=None, **kwargs):

@@ -4,6 +4,16 @@ import torch.nn as nn
 from typing import List, Tuple
 import torch.nn.functional as F
 
+def sim_matrix(a, b, eps=1e-8):
+    """
+    added eps for numerical stability
+    """
+    a_n, b_n = a.norm(dim=1)[:, None], b.norm(dim=1)[:, None]
+    a_norm = a / torch.max(a_n, eps * torch.ones_like(a_n))
+    b_norm = b / torch.max(b_n, eps * torch.ones_like(b_n))
+    sim_mt = torch.mm(a_norm, b_norm.transpose(0, 1))
+    return sim_mt
+
 def info_nce_loss(
     hidden_states, 
     onegen_config,
@@ -52,7 +62,7 @@ def info_nce_loss(
     return loss
 
 def bpr_loss(
-    hidden_states_unnorm,
+    hidden_state_unnorm,
     onegen_config,
     embedding_index: Tuple[torch.LongTensor, torch.LongTensor],
     embedding_index_split_flag: List,

@@ -4,13 +4,13 @@ sys.path.append('../')
 from typing import List, Dict, Any, Union, Tuple, Optional
 import torch
 import torch.nn as nn
-from transformers import AutoModelForCausalLM, AutoTokenizer
-from dataclass import dataclass
+from transformers import AutoModelForCausalLM, AutoTokenizer, LlamaForCausalLM
+from dataclasses import dataclass
 
-from .config import DataConfig, TrainingConfig, OneGenConfig, SpecialTokenConfig
-from .util import EnumContrastiveLoss, _print
-from .tokenizer import Tokenizer
-
+from onegen.config import DataConfig, TrainingConfig, OneGenConfig, SpecialTokenConfig
+from onegen.util import EnumContrastiveLoss, _print
+from onegen.tokenizer import Tokenizer
+from torch.nn import CrossEntropyLoss
 
 class CausalLMOutputWithPast:
     def __init__(self, loss, logits, past_key_values, hidden_states, attentions):
@@ -23,7 +23,8 @@ class CausalLMOutputWithPast:
     def __contains__(self, key):
         return hasattr(self, key)
 
-class OneGenModel(AutoModelForCausalLM):
+# 
+class OneGenModel(LlamaForCausalLM):
     """
     This class is only used at training time.
     AutoModelForCausalLM is still a prefered class at inference time.
@@ -61,7 +62,7 @@ class OneGenModel(AutoModelForCausalLM):
             for idx, token in enumerate(reversed(special_token_config.get_all_tokens()), start=1):
                 description = special_token_config.get_desciption(token)
                 tokenized = tokenizer.tokenize(description)
-                tokenized_ids = toeknizer.convert_tokens_to_ids(tokenized)
+                tokenized_ids = tokenizer.convert_tokens_to_ids(tokenized)
 
                 # embedding layer
                 new_embedding = self.model.embed_tokens.weight[tokenized_ids].mean(axis=0)
@@ -72,6 +73,7 @@ class OneGenModel(AutoModelForCausalLM):
                 self.lm_head.weight[-idx, :] = last_embedding.clone().detach().requires_grad_(True)
 
     def forward(
+        self,
         input_ids: torch.LongTensor = None,
         attention_mask: Optional[torch.Tensor] = None,
         position_ids: Optional[torch.LongTensor] = None,
@@ -121,7 +123,6 @@ class OneGenModel(AutoModelForCausalLM):
             output_hidden_states=output_hidden_states,
             return_dict=return_dict
         )
-
         hidden_states = outputs[0]
         logits = self.lm_head(hidden_states)
         logits = logits.float()
@@ -192,3 +193,11 @@ class OneGenModel(AutoModelForCausalLM):
         column_index = column_index.to(hidden_states.device)
         all_mention_representation = hidden_states[row_index, column_index] # [bs, dim]
         return all_mention_representation
+
+    # @classmethod
+    # def from_pretrained(cls, *args, **kwargs):
+    #     model = super(OneGenModel, cls).from_pretrained(*args, **kwargs)
+    #     model.__class__ = cls
+    #     model.train_mode: bool = False
+    #     model.cl_loss_mapping:dict = EnumContrastiveLoss.get_loss_mapping()
+    #     return model

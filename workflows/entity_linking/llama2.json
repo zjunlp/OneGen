@@ -18,22 +18,22 @@
         "CTX": {}
     },
     "info-data-db": {
-        "file_path": "../../data/entity_linking/train.jsonl",
-        "cache_file_path": "../../data/entity_linking/train.cache",
+        "file_path": "./data/entity_linking/db.jsonl",
+        "cache_file_path": "./data/entity_linking/db.cache",
         "repr_token": ["[SE]"],
         "mask_token_from_to": [],
         "templator": "DocumentTemplator"
     },
     "info-data-train": {
-        "file_path": "../../data/entity_linking/db.jsonl",
-        "cache_file_path": "../../data/entity_linking/db.cache",
+        "file_path": "./data/entity_linking/train.jsonl",
+        "cache_file_path": "./data/entity_linking/train.cache",
         "repr_token": ["[LK]"],
         "mask_token_from_to": [],
-        "templator": "SelfRAG_LLama2Templator"
+        "templator": "EntityLinking_Llama2Templator"
     },
     "info-model":{
-        "model_path": "",
-        "tokenizer_path": "",
+        "model_path": "/gruntdata/event_graph/shanghua.zjt/plm/llama-2-7b-chat-hf",
+        "tokenizer_path": "/gruntdata/event_graph/shanghua.zjt/plm/llama-2-7b-chat-hf",
         "model_type": "llama2",
         "max_length": 1300,
         "padding_side": "right",
@@ -44,16 +44,19 @@
         "gradient_checkpointing": true,
         "learning_rate": 5e-6,
         "optim": "adamw_torch",
+        "do_eval": false,
+        "logging_steps": 1,
         "save_steps": 500,
         "report_to": "tensorboard",
         "save_total_limit": 10,
-        "micro_batch_size": 5,
+        "per_device_train_batch_size": 5,
         "gradient_accumulation_steps": 2,
-        "epochs": 3,
+        "load_best_model_at_end": false,
+        "num_train_epochs": 3,
         "bf16": true,
         "fp16": false,
-        "output_dir": "../../output",
-        "deepspeed": "../../deepspeed_cfg/ds_z3_config.json"
+        "output_dir": "./output/entity_linking/llama2",
+        "deepspeed": "./deepspeed_cfg/ds_z3_config.json"
     },
     "resume_checkpoint_path": null
 }

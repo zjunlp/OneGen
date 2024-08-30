@@ -40,9 +40,9 @@ class EnumContrastiveLoss(Enum):
     @classmethod
     def get_loss_mapping(cls) -> dict:
         return {
-            cls.BPR: bpr_loss,
+            # cls.BPR: bpr_loss,
+            # cls.InfoNCE: info_nce_loss,
             cls.BPR.value: bpr_loss,
-            cls.InfoNCE: info_nce_loss,
             cls.InfoNCE.value: info_nce_loss
         }
 
