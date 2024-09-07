@@ -263,7 +263,7 @@ model output 2<end_of_turn>"""
             structured_final_input = ["<bos>"],
         )
 
-class DocumentTemplator:
+class DocumentTemplator(Templator):
 
     @classmethod
     def wrap(cls, messages:List, **kwargs) -> List[str]:

@@ -2,8 +2,8 @@
     "onegen": {
         "loss_type": "BPR",
         "info_nce_temperature": 0.02,
-        "n_pos_per_sent": 1,
-        "n_neg_per_pos": 3,
+        "n_pos_per_sent": 2,
+        "n_neg_per_pos": 6,
         "lambda_r": 1,
         "lambda_g": 1
     },
@@ -19,42 +19,46 @@
         }
     },
     "info-data-db": {
-        "file_path": "",
-        "cache_file_path": "",
+        "file_path": "./data/train_data/multi_hop_qa/db.jsonl",
+        "cache_file_path": "./data/train_data/multi_hop_qa/db.cache",
         "repr_token": ["[Document Fragment Representation]"],
         "mask_token_from_to": [],
         "templator": "DocumentTemplator"
     },
     "info-data-train": {
-        "file_path": "",
-        "cache_file_path": "",
+        "file_path": "./data/train_data/multi_hop_qa/train.jsonl",
+        "cache_file_path": "./data/train_data/multi_hop_qa/train.cache",
         "repr_token": ["[Question Representation]"],
-        "mask_token_from_to": [["<paragraph>", "</paragraph"]],
-        "templator": "SelfRAG_LLama2Templator"
+        "mask_token_from_to": [["<paragraph>", "</paragraph>"]],
+        "templator": "DocumentTemplator"
     },
     "info-model":{
-        "model_path": "",
-        "tokenizer_path": "",
-        "model_type": "",
-        "max_length": 2048,
+        "model_path": "meta-llama/Llama-2-7b-chat-hf",
+        "tokenizer_path": "meta-llama/Llama-2-7b-chat-hf",
+        "model_type": "llama2",
+        "max_length": 1200,
         "padding_side": "right",
         "padding_label_id": -100,
-        "padding_input_id": 1
+        "padding_input_id": 2
     },
     "train": {
         "gradient_checkpointing": true,
         "learning_rate": 2e-5,
         "optim": "adamw_torch",
+        "do_eval": false,
+        "logging_steps": 1,
         "save_steps": 500,
         "report_to": "tensorboard",
         "save_total_limit": 10,
-        "micro_batch_size": 3,
+        "per_device_train_batch_size": 2,
         "gradient_accumulation_steps": 4,
-        "epochs": 3,
+        "load_best_model_at_end": false,
+        "num_train_epochs": 3,
         "bf16": true,
         "fp16": false,
-        "output_dir": "",
-        "deepspeed": ""
+        "output_dir": "./output/multi_hop_qa/llama2",
+        "deepspeed": "./deepspeed_config/ds_z3_config.json",
+        "save_only_model": true
     },
     "resume_checkpoint_path": null
 }

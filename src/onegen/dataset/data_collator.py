@@ -223,7 +223,7 @@ class AutoDataCollator:
                     # we must make sure that all the uid is the form of `{doc_id}-{sent_id}`.
                     _random_uid:List[str] = self.dataset.get_random_uid_list(n=self.random_n)
                     for uid in _random_uid:
-                        if uid not in flatten_neg_uid and uid not in flatten_pos_uid and self.data.get_doc_id_for(uid) in self.data.db_data:
+                        if uid not in flatten_neg_uid and uid not in flatten_pos_uid and self.dataset.get_doc_id_for(uid) in self.dataset.db_data:
                             cnt += 1
                             final_neg_uid[-1][-1].append(uid)
                             flatten_neg_uid.append(uid)

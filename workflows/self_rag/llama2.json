@@ -33,22 +33,22 @@
         }
     },
     "info-data-db": {
-        "file_path": "./data/self_rag/db.jsonl",
-        "cache_file_path": "./data/self_rag/db.cache",
+        "file_path": "./data/train_data/self_rag/db.jsonl",
+        "cache_file_path": "./data/train_data/self_rag/db.cache",
         "repr_token": ["[Document Fragment Representation]"],
         "mask_token_from_to": [],
         "templator": "DocumentTemplator"
     },
     "info-data-train": {
-        "file_path": "./data/self_rag/train.jsonl",
-        "cache_file_path": "./data/self_rag/train.cache",
+        "file_path": "./data/train_data/self_rag/train.jsonl",
+        "cache_file_path": "./data/train_data/self_rag/train.cache",
         "repr_token": ["[Question Representation]"],
         "mask_token_from_to": [["<paragraph>", "</paragraph>"]],
         "templator": "DocumentTemplator"
     },
     "info-model":{
-        "model_path": "/gruntdata/event_graph/shanghua.zjt/plm/llama-2-7b-chat-hf",
-        "tokenizer_path": "/gruntdata/event_graph/shanghua.zjt/plm/llama-2-7b-chat-hf",
+        "model_path": "meta-llama/Llama-2-7b-chat-hf",
+        "tokenizer_path": "meta-llama/Llama-2-7b-chat-hf",
         "model_type": "llama2",
         "max_length": 2048,
         "padding_side": "right",
@@ -59,9 +59,9 @@
         "gradient_checkpointing": true,
         "learning_rate": 2e-5,
         "optim": "adamw_torch",
-        "save_steps": 500,
+        "save_steps": 1000,
         "report_to": "tensorboard",
-        "save_total_limit": 10,
+        "save_total_limit": 2,
         "do_eval": false,
         "logging_steps": 1,
         "per_device_train_batch_size": 3,
@@ -71,7 +71,8 @@
         "bf16": true,
         "fp16": false,
         "output_dir": "./output/self_rag/llama2",
-        "deepspeed": "./deepspeed_cfg/ds_z3_config.json"
+        "deepspeed": "./deepspeed_config/ds_z3_config.json",
+        "save_only_model": false
     },
     "resume_checkpoint_path": null
 }

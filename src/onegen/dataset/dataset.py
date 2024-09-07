@@ -248,6 +248,8 @@ class AutoDataset(torch.utils.data.Dataset):
             
     # custom function for parsing id of positive and negative
     def get_doc_id_for(self, uid:str) -> str:
+        if uid == None:
+            return 'None'
         assert isinstance(uid, str)
         doc_id = uid
         if "-" in uid:

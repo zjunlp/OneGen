@@ -1,8 +1,18 @@
-IGNORE_LABEL_ID = -100
 
 
 from enum import Enum, unique
 from .loss import bpr_loss, info_nce_loss
+from transformers import GenerationConfig
+
+# for padding
+IGNORE_LABEL_ID = -100
+
+# for generation
+MAX_NEW_TOKENS:int = 2048
+DEFAULT_GENERATION_CONFIG = GenerationConfig(
+    num_beams=1, do_sample=False, temperature=1, output_hidden_states=True
+)
+MAX_RETRIEVAL_CNT:int = 5
 
 @unique
 class EnumTokenRole(Enum):

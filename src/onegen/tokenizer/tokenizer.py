@@ -5,6 +5,7 @@ from typing import List, Dict
 from onegen.util import _print
 from onegen.util.constant import IGNORE_LABEL_ID
 from copy import deepcopy
+import torch.distributed as dist
 
 class Tokenizer:
     """
@@ -158,6 +159,13 @@ class Tokenizer:
 
     def __len__(self):
         return len(self.tokenizer)
+
+    def save(self, output_path):
+        if dist.get_rank() == 0:
+            _print(f"[CUDA:0] start saving the tokenizer at `{output_path}`")
+            self.tokenizer.save_pretrained(output_path)
+            _print(f"[CUDA:0] saving successfully.")
+        dist.barrier()
 
 if __name__ == '__main__':
     tokenizer = Tokenizer(

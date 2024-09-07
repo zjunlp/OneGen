@@ -1,20 +1,27 @@
 import time
-from typing import Any, List, Dict
+from typing import Any, List, Dict, Union
 import json
 import jsonlines
 import os
 import pickle
 from tqdm import tqdm
 import torch.distributed as dist
+import torch
 
 def _print(message:Any):
     print(f"[{time.ctime()}] {message}")
 
 class FileWriter:
     @classmethod
-    def write_jsonl(cls, data:List[Dict], file_name:str, overwrite:bool=False):
-        if FileReader.is_existed(file_name) == True and not overwrite:
+    def get_current_time(cls) -> str:
+        return time.ctime().replace("  "," ").replace(" ","-").replace(":","-")
+
+    @classmethod
+    def write_jsonl(cls, data:List[Dict], file_name:str, overwrite:bool=False, rewrite_name:bool=True):
+        if FileReader.is_existed(file_name) == True and not overwrite and not rewrite_name:
             raise ValueError(f"The file `{file_name}` has existed. Please set the other `file_name` or make the `overwrite` True.")
+        if FileReader.is_existed(file_name) == True and rewrite_name and not overwrite:
+            file_name = f"{file_name}-{cls.get_current_time()}"
         if dist.get_rank() == 0:
             with jsonlines.open(file_name, 'w') as writer:
                 pbar = tqdm(total=len(data))
@@ -25,26 +32,42 @@ class FileWriter:
         dist.barrier()
 
     @classmethod
-    def write_json(cls, data:dict, file_name:str, overwrite:bool=False):
-        if FileReader.is_existed(file_name) == True and not overwrite:
+    def write_json(cls, data:dict, file_name:str, overwrite:bool=False, rewrite_name:bool=True):
+        if FileReader.is_existed(file_name) == True and not overwrite and not rewrite_name:
             raise ValueError(f"The file `{file_name}` has existed. Please set the other `file_name` or make the `overwrite` True.")
+        if FileReader.is_existed(file_name) == True and rewrite_name and not overwrite:
+            file_name = f"{file_name}-{cls.get_current_time()}"
         if dist.get_rank() == 0:
             with open(file_name, 'w') as writer:
                 json.dump(data, writer)
         dist.barrier()
 
     @classmethod
-    def write_pickle(cls, data, file_name:str, overwrite:bool=False):
-        if FileReader.is_existed(file_name) == True and not overwrite:
+    def write_pickle(cls, data, file_name:str, overwrite:bool=False, rewrite_name:bool=True):
+        if FileReader.is_existed(file_name) == True and not overwrite and not rewrite_name:
             raise ValueError(f"The file `{file_name}` has existed. Please set the other `file_name` or make the `overwrite` True.")
+        if FileReader.is_existed(file_name) == True and rewrite_name and not overwrite:
+            file_name = f"{file_name}-{cls.get_current_time()}"
         if dist.get_rank() == 0:
             with open(file_name, 'wb') as writer:
                 pickle.dump(data, writer)
         dist.barrier()
 
+    @classmethod
+    def write_pt(cls, data, file_name:str, overwrite:bool=False, rewrite_name:bool=True):
+        if FileReader.is_existed(file_name) == True and not overwrite and not rewrite_name:
+            raise ValueError(f"The file `{file_name}` has existed. Please set the other `file_name` or make the `overwrite` True.")
+        if FileReader.is_existed(file_name) == True and rewrite_name and not overwrite:
+            file_name = f"{file_name}-{cls.get_current_time()}"
+        if dist.get_rank() == 0:
+            torch.save(data, file_name)
+        dist.barrier()
+
 class FileReader:
     @classmethod
     def is_existed(cls, file_name:str) -> bool:
+        if file_name == None:
+            return False
         return os.path.exists(file_name)
 
     @classmethod
@@ -57,7 +80,7 @@ class FileReader:
         return cnt
     
     @classmethod
-    def read_json(cls, file_name:str) -> Dict:
+    def read_json(cls, file_name:str) -> Union[Dict,List[Dict]]:
         assert cls.is_existed(file_name), \
             f"The file `{file_name}` is not existed."
         with open(file_name, 'r') as file:
@@ -87,3 +110,9 @@ class FileReader:
         with open(file_name, 'rb') as file:
             results = pickle.load(file)
         return results
+
+    @classmethod
+    def read_pt(cls, file_name:str) -> Any:
+        assert cls.is_existed(file_name), \
+            f"The file `{file_name}` is not existed."
+        return torch.load(file_name)

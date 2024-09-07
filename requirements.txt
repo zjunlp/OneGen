@@ -1,2 +1,7 @@
 transformers
 deepspeed
+ujson
+accelerate
+fire
+jsonlines
+torch

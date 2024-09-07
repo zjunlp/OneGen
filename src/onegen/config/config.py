@@ -25,6 +25,7 @@ class TrainingConfig:
     per_device_train_batch_size: int
     gradient_accumulation_steps: int
     fp16: bool
+    save_only_model: bool
 
     def to_dict(self):
         return vars(self)
@@ -139,7 +140,7 @@ class OneGenConfig:
             assert False, f"`{self.loss_type}` is not supported. The supported loss functions are in the list `{EnumContrastiveLoss.to_list()}`"
         return common_output
 
-def parse_config(file_name:str) -> Tuple[TrainingConfig, DataConfig, DataConfig, PaddingConfig, SpecialTokenConfig, OneGenConfig, str]:
+def parse_workflow(file_name:str) -> Tuple[TrainingConfig, DataConfig, DataConfig, PaddingConfig, SpecialTokenConfig, OneGenConfig, str]:
     data:dict = FileReader.read_json(file_name=file_name)
 
     resume_checkpoint_path = data['resume_checkpoint_path']

@@ -18,22 +18,22 @@
         "CTX": {}
     },
     "info-data-db": {
-        "file_path": "./data/entity_linking/db.jsonl",
-        "cache_file_path": "./data/entity_linking/db.cache",
+        "file_path": "./data/train_data/entity_linking/db.jsonl",
+        "cache_file_path": "./data/train_data/entity_linking/db.cache",
         "repr_token": ["[SE]"],
         "mask_token_from_to": [],
         "templator": "DocumentTemplator"
     },
     "info-data-train": {
-        "file_path": "./data/entity_linking/train.jsonl",
-        "cache_file_path": "./data/entity_linking/train.cache",
+        "file_path": "./data/train_data/entity_linking/train.jsonl",
+        "cache_file_path": "./data/train_data/entity_linking/train.cache",
         "repr_token": ["[LK]"],
         "mask_token_from_to": [],
         "templator": "EntityLinking_Llama2Templator"
     },
     "info-model":{
-        "model_path": "/gruntdata/event_graph/shanghua.zjt/plm/llama-2-7b-chat-hf",
-        "tokenizer_path": "/gruntdata/event_graph/shanghua.zjt/plm/llama-2-7b-chat-hf",
+        "model_path": "meta-llama/Llama-2-7b-chat-hf",
+        "tokenizer_path": "meta-llama/Llama-2-7b-chat-hf",
         "model_type": "llama2",
         "max_length": 1300,
         "padding_side": "right",
@@ -52,11 +52,12 @@
         "per_device_train_batch_size": 5,
         "gradient_accumulation_steps": 2,
         "load_best_model_at_end": false,
-        "num_train_epochs": 3,
+        "num_train_epochs": 6,
         "bf16": true,
         "fp16": false,
         "output_dir": "./output/entity_linking/llama2",
-        "deepspeed": "./deepspeed_cfg/ds_z3_config.json"
+        "deepspeed": "./deepspeed_config/ds_z3_config.json",
+        "save_only_model": true
     },
     "resume_checkpoint_path": null
 }
