@@ -7,15 +7,15 @@
 ![](https://img.shields.io/github/last-commit/zjunlp/OneGen?color=green) 
 
 <p align="center">
-  <a href="https://arxiv.org/">~~📄arXiv~~</a> •
-  <a href="https://x.com/">~~𝕏 Blog~~</a> •
-  <a href="https://huggingface.co/zjunlp">~~🤗 HF~~</a>
+  <a>📄arXiv</a> •
+  <a>𝕏 Blog</a> •
+  <a>🤗 HF</a>
   <br>
-  <a href="https://huggingface.co/zjunlp">~~🤗 HF (Model)~~</a> •
-  <a href="https://www.modelscope.cn/organization/ZJUNLP?tab=model">~~🔭 Model Scope (Model)~~</a> •
-  <a href="https://www.wisemodel.cn/organization/zjunlp">~~🧊 Wise Model (Model)~~</a> 
+  <a>🤗 HF (Model)</a> •
+  <a>🔭 Model Scope (Model)</a> •
+  <a>🧊 Wise Model (Model)</a> 
   <br>
-  <a href="https://huggingface.co/zjunlp">~~🤗 HF (Data)~~</a> •
+  <a>🤗 HF (Data)</a> •
   <a href="https://drive.google.com/drive/folders/1ByufnAyvsfnrIVJzMwOHql3lYFVy6IJx?usp=drive_link">☁️ Google Drive (Data)</a>
 </p>
 
@@ -70,6 +70,7 @@ pip install -r requirements.txt
 > The inference section focuses on running model predictions to get output results. The evaluation of these results is discussed in the Evaluation section. (Single-hop QA is an exception)
 
 ### Download the data
+
 Download `train_data.tar.gz` and `eval_data.tar.gz` from [Google Drive](https://drive.google.com/drive/folders/1ByufnAyvsfnrIVJzMwOHql3lYFVy6IJx?usp=drive_link). After extracting, you will get two folders: `train_data` and `eval_data`. Move these two folders into the `data` directory. Use the following commands to extract the files:
 ```bash
 tar -xzvf train_data.tar.gz
@@ -77,8 +78,10 @@ tar -xzvf eval_data.tar.gz
 ```
 
 ### Download the model (Optional)
+
 <details> 
 <summary><b>Download the model (Optional)</b></summary> 
+  
 The models are still being uploaded. We plan to make the trained models available on [Huggingface](https://huggingface.co/zjunlp), [WiseModel](https://www.wisemodel.cn/organization/zjunlp), and [ModelScope](https://www.modelscope.cn/organization/ZJUNLP?tab=model) platforms by September 12th. 
 </details>
 
