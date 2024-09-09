@@ -1,0 +1,55 @@
+{
+    "evaluator": {
+        "evaluator_class": "EntityLinkingEvaluator"
+    },
+    "adapter": {
+        "adapter_class": "EntityLinkingAdapter"
+    },
+    "generator": {
+        "model_class": "AutoModelForCausalLM",
+        "model_path": "/your/path/to/model",
+        "tokenizer_path": "/your/path/to/tokenizer",
+        "torch_dtype": "bf16",
+        "special_token_list": [],
+        "add_prefix_space": false,
+        "add_eos_token": false,
+        "add_bos_token": false,
+        "padding_side": "right",
+        "padding_token": "</s>",
+        "concatenate_template": "{history}{document}",
+        "stop_token_list": ["</s>"],
+        "repr_token_list": ["[SE]", "[LK]"]
+    },
+    "retriever": null,
+    "file": {
+        "test": {
+            "file_path": "./data/eval_data/entity_linking/el/kore50.benchmark.jsonl",
+            "templator": null
+        },
+        "db": {
+            "file_path": null,
+            "cache_file_path": "/your/path/to/embedding.pkl",
+            "templator": null
+        }
+    },
+    "inference": {
+        "max_new_tokens": 512,
+        "generation_config": {
+            "num_beams": 1,
+            "do_sample": false,
+            "temperature": 1,
+            "output_hidden_states": true
+        },
+        "embed_batch_size": 64,
+        "max_retrieval_cnt": null,
+        "skip_repr_token_cnt": 1,
+        "sentence_connector": ""
+    },
+    "other": {
+        "rules": [
+            ["</MENTION>[LK]", "[_CONTINUE_]"]
+        ],
+        "input_template": "[INST] You are good at mention detection. Identify and extract mentions of entities from the text. Please output the original text with annotations. Here, the annotation for each mention should be formatted as `<MENTION>{{mention in text}}</MENTION>` when displayed. \n\nTEST TEXT:\n{input} [/INST]"
+    },
+    "output_file_path": "/your/path/to/result.jsonls"
+}

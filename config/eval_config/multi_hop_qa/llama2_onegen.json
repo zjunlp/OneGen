@@ -1,0 +1,53 @@
+{
+    "evaluator": {
+        "evaluator_class": "RAGEvaluator"
+    },
+    "adapter": {
+        "adapter_class": "MultiHopQAAdapter"
+    },
+    "generator": {
+        "model_class": "AutoModelForCausalLM",
+        "model_path": "/your/path/to/model",
+        "tokenizer_path": "/your/path/to/tokenizer",
+        "torch_dtype": "bf16",
+        "special_token_list": [],
+        "add_prefix_space": false,
+        "add_eos_token": false,
+        "add_bos_token": false,
+        "padding_side": "right",
+        "padding_token": "</s>",
+        "concatenate_template": "{history}<paragraph>{document}</paragraph>",
+        "stop_token_list": ["</s>", "[Question Representation]"],
+        "repr_token_list": ["[Question Representation]", "[Document Fragment Representation]"]
+    },
+    "retriever": null,
+    "file": {
+        "test": {
+            "file_path": "./data/eval_data/multi_hop_qa/2wiki/dev.json",
+            "templator": null
+        },
+        "db": {
+            "file_path": null,
+            "cache_file_path": null,
+            "templator": null
+        }
+    },
+    "inference": {
+        "max_new_tokens": 2048,
+        "generation_config": {
+            "num_beams": 1,
+            "do_sample": false,
+            "temperature": 1,
+            "output_hidden_states": true
+        },
+        "embed_batch_size": 64,
+        "max_retrieval_cnt": null,
+        "skip_repr_token_cnt": 1,
+        "sentence_connector": "[Document Fragment Representation]"
+    },
+    "other": {
+        "input_template": "You are good at multi-step reasoning in QA. For complex questions, break down the process. Generate and answer sub-questions step-by-step, using retrieved documents at each stage. Output the final answer wrapped by <FINAL-ANSWER></FINAL-ANSWER>. Here is a question: {input}",
+        "embed_template": "Represent the following document fragment and output it after the '[Document Fragment Representation]' token. \nHere are document fragment:\n{input}"
+    },
+    "output_file_path": "/your/path/to/save/result.jsonl"
+}

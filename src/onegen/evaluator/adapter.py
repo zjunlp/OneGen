@@ -87,8 +87,7 @@ class EntityLinkingAdapter(Adapter):
         return item['uid']
 
     def get_db_prompt(self, item:dict) -> str:
-        print(item)
-        return "".join(self.db_templator.wrap(item['messages']))
+        return "<s>" + "".join(self.db_templator.wrap(item['messages']))
     
     def convert(self):
         """
@@ -138,7 +137,7 @@ class EntityLinkingAdapter(Adapter):
             pbar.update(1)
         pbar.close()
 
-    def get_prompt(self, item:dict) -> Dict:
+    def get_prompt(self, item:dict) -> str:
         question = item['text']
         return self.kwargs['input_template'].format(input=question)
 
@@ -156,6 +155,18 @@ class EntityLinkingAdapter(Adapter):
     
     def __len__(self) -> int:
         return len(self.data)
+
+class EntityDisambiguationAdapter(EntityLinkingAdapter):
+    def __init__(
+        self,
+        file_config:FileConfig,
+        inference_config: InferenceConfig,
+        **kwargs,
+    ): 
+        super().__init__(file_config, inference_config, **kwargs)
+    
+    def get_prompt(self, item:dict) -> str:
+        return self.kwargs['input_template'].format(input=item['sentence']) + item['labeled_sentence']
 
 class MultiHopQAAdapter(Adapter):
     def __init__(

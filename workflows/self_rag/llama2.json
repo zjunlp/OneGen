@@ -71,7 +71,7 @@
         "bf16": true,
         "fp16": false,
         "output_dir": "./output/self_rag/llama2",
-        "deepspeed": "./deepspeed_config/ds_z3_config.json",
+        "deepspeed": "./config/deepspeed_config/ds_z3_config.json",
         "save_only_model": false
     },
     "resume_checkpoint_path": null

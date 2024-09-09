@@ -5,3 +5,4 @@ accelerate
 fire
 jsonlines
 torch
+tensorboard

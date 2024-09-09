@@ -116,4 +116,3 @@ class ComponentConfig:
         return f"model_class: {self.model_class}\nmodel_path: {self.model_path}\ntokenizer_path: {self.tokenizer_path}\ntorch_dtype: {self.torch_dtype}\nspecial_token_list: {self.special_token_list}" + \
             f"add_prefix_space: {self.add_prefix_space}\nadd_eos_token: {self.add_eos_token}\nadd_bos_token: {self.add_bos_token}\nstop_token_list: {self.stop_token_list}\nrepr_token_list: {self.repr_token_list}\n" + \
             f"padding_side: {self.padding_side}"
-

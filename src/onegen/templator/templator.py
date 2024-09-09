@@ -342,9 +342,6 @@ class EntityLinking_Llama2Templator(Templator):
         assert messages[1]['role'] == 'assistant'
         return [messages[0]['content'], " "+messages[1]['content']]
 
-
-
-
 if __name__ == '__main__':
     
     # TODO: check len(messages) == len(output)

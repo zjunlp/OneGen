@@ -500,16 +500,20 @@ class RAGEvaluator(Evaluator):
         return meta_candidate_list[doc_id_list[index]], doc_embedding
 
     def extract_query(self, output:dict) -> str:
-        return output['output']
-        # # We use rule to extract query from increment string.
-        # increment = output['increment']
-        # tags = ["First, ", "Second, ", "Third, ", "Fourth, ", "Fifth"]
-        # query = increment
-        # for tag in reversed(tags):
-        #     if tag in increment:
-        #         query = tag.join(increment.split(tag)[1:])
-        #         break
-        # return query
+        if self.mapping_func != None:
+            # this is used for onegen
+            return output['output']
+        else:
+            # this is used for baseline
+            # We use rule to extract query from increment string.
+            increment = output['increment']
+            tags = ["First, ", "Second, ", "Third, ", "Fourth, ", "Fifth"]
+            query = increment
+            for tag in reversed(tags):
+                if tag in increment:
+                    query = tag.join(increment.split(tag)[1:])
+                    break
+            return query
 
     def extract_final_answer(self, output:dict) -> str:
         increment = output['increment']
@@ -530,6 +534,7 @@ class RAGEvaluator(Evaluator):
             self.backend = OneGen(generator_config)
             self.mapping_func = RAGEvaluator.mapping_func
         else:
+            # This is baseline
             self.backend = Backend(generator_config, retriever_config)
             self.mapping_func = None
         
@@ -748,52 +753,128 @@ class EntityLinkingEvaluator(Evaluator):
         # save file
         FileWriter.write_jsonl(results, output_file_path)
 
+class MentionDetectionEvaluator(EntityLinkingEvaluator):
+    
+    def __init__(
+        self, 
+        generator_config: ComponentConfig,
+        **kwargs
+    ):
+        super().__init__(generator_config, **kwargs)
+    
+    def run_single(
+        self,
+        prompt:str,
+        candidate_list:Union[List[str], List[List[str]]]=None, 
+        meta_candidate_list:Union[List[str], List[List[str]]]=None,
+        max_new_tokens:int=1024,
+        input_ids=None,
+        generation_config: GenerationConfig=DEFAULT_GENERATION_CONFIG,
+        embed_batch_size:int=16,
+        doc_embedding:torch.Tensor=None,
+        doc_embedding_label:List[str]=None,
+        sentence_connector:str="",
+        max_retrieval_cnt:int=MAX_RETRIEVAL_CNT,
+        skip_repr_token_cnt:int=0
+    ):
+        # we don't need do retrieval for mention detection task.
+        # 1. generating when encounter eos token
+        output:dict = self.backend.generate(
+            generation_config=generation_config,
+            max_new_tokens=max_new_tokens,
+            prompt=prompt,
+            input_ids=None,
+            past_key_values=None,
+            logits_processor=self.logits_processor
+        )
+
+        return {
+            "output": output['increment'],
+            "output_qid": [doc_embedding_label[index] for index in arg_max_index]
+        }
+    
+class EntityDisambiguationEvaluator(EntityLinkingEvaluator):
+    def __init__(
+        self, 
+        generator_config: ComponentConfig,
+        **kwargs
+    ):
+        super().__init__(generator_config, **kwargs)
+
+    def run_single(
+        self,
+        prompt:str,
+        candidate_list:Union[List[str], List[List[str]]]=None, 
+        meta_candidate_list:Union[List[str], List[List[str]]]=None,
+        max_new_tokens:int=1024,
+        input_ids=None,
+        generation_config: GenerationConfig=DEFAULT_GENERATION_CONFIG,
+        embed_batch_size:int=16,
+        doc_embedding:torch.Tensor=None,
+        doc_embedding_label:List[str]=None,
+        sentence_connector:str="",
+        max_retrieval_cnt:int=MAX_RETRIEVAL_CNT,
+        skip_repr_token_cnt:int=0
+    ):
+        # We don't need to do generate for entity disambiguation task.
+        # 1. prefill the prompt to get the hidden_state
+        output = dict(
+            token_seq=torch.as_tensor([self.backend.generator_tokenizer(prompt)['input_ids']]), 
+            hidden_states=None, 
+            increment=""
+        )
+        _output = self.backend.generator.model(
+            input_ids=output['token_seq'],
+            output_hidden_states=True,
+        )
+        output['last_hidden_states'] = _output[0]
+
+        # 2. get the hidden state corresponding to the special token
+        # [1, n_tokens, dim] 
+        hidden_state_in_last_layer:torch.Tensor = output['last_hidden_states']
+        assert len(hidden_state_in_last_layer) == 1, "We now only support the situation of n_beams=1."
+
+        # 3. locate the special token
+        repr_token_id_list:List[int] = self.backend.generator_config.repr_token_id_list
+        token_seq = output['token_seq']
+        row_index = []
+        column_index = []
+        for n_beam in range(token_seq.shape[0]):
+            for n_token in range(token_seq.shape[1]):
+                token_id = token_seq[n_beam, n_token]
+                if token_id in repr_token_id_list:
+                    row_index.append(n_beam)
+                    column_index.append(n_token)
+        row_index = torch.as_tensor(row_index)
+        column_index = torch.as_tensor(column_index)
+        
+        # 4. get the embedding
+        embedding:torch.Tensor = None
+        if len(row_index) != 0:
+            embedding = hidden_state_in_last_layer[row_index, column_index, :]
+            if len(embedding.shape) == 3:
+                embedding = embedding.squeeze(dim=0)        # [n_repr, dim]
+
+        # 5. generate doc embedding
+        if doc_embedding == None:
+            assert candidate_list != None
+            # [n_doc, dim]
+            doc_embedding = self.backend.encode(
+                texts=candidate_list,
+                batch_size=embed_batch_size,
+                sentence_connector=sentence_connector,
+                skip_repr_token_cnt=skip_repr_token_cnt
+            )
+
+        # 6. calculate similarity
+        scores = sim_matrix(embedding, doc_embedding)    # [n_repr_, n_doc]
+        arg_max_index = torch.argmax(scores, dim=1)    # [n_repr]
+
+        return {
+            "output": output['increment'],
+            "output_qid": [doc_embedding_label[index] for index in arg_max_index]
+        }
+    
+
 if __name__ == '__main__':
     pass
-    # output_file_path = ""
-    # generator_config = ComponentConfig(
-    #     model_class
-    #     model_path:str
-    #     tokenizer_path:str
-    #     torch_dtype
-    #     special_token_list:List[str]
-    #     add_prefix_space: bool = False
-    #     add_eos_token:bool = False
-    #     add_bos_token:bool = False
-    #     padding_side:str
-    #     padding_token:str
-    #     # this variable is only used for retrieval then generation task
-    #     concatenate_template:str = "{history}{document}"
-    #     # the following variables are used for generator
-    #     stop_token_list:List[str]
-    #     repr_token_list:List[str]
-    # )
-    # file_config = FileConfig(
-    #     test_file_path: str
-    #     db_file_path: str
-    #     db_cache_embedding_path: str
-    #     test_templator: Templator
-    #     db_templator: Templator
-    # )
-    # inference_config = InferenceConfig(
-    #     max_new_tokens:int 
-    #     generation_config:GenerationConfig
-    #     embed_batch_size:int
-    #     sentence_connector:str
-    #     max_retrieval_cnt:int
-
-    #     # only for database
-    #     skip_repr_token_cnt:int
-    # )
-
-    # evaluator = EntityLinkingEvaluator(generator_config=generator_config)
-
-    # adapter = EntityLinkingAdapter(
-    #     file_config=file_config,
-    #     inference_config=inference_config
-    # )
-    
-    # evaluator.run(
-    #     adapter=adapter, 
-    #     output_file_path=output_file_path
-    # )
