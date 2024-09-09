@@ -1,17 +1,24 @@
 <div align="center">
 <h1 align="center"> 👉 OneGen 👈 </h1>
 <b>OneGen: Efficient One-Pass Unified Generation and Retrieval for LLMs</b>
-  
-<p align="center">
-  <a href="https://arxiv.org/">📄arXiv</a> •
-  <a href="https://x.com/">𝕏 Blog</a> •
-  <a href="https://huggingface.co/">🤗 HF</a> •
-  <a href="https://drive.google.com">☁️ Google Drive</a>
-</p>
 
 [![Awesome](https://awesome.re/badge.svg)](https://github.com/zjunlp/OneGen) 
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 ![](https://img.shields.io/github/last-commit/zjunlp/OneGen?color=green) 
+
+<p align="center">
+  <a href="https://arxiv.org/">📄arXiv</a> •
+  <a href="https://x.com/">𝕏 Blog</a> •
+  <a href="https://huggingface.co/zjunlp">🤗 HF</a>
+  <br>
+  <a href="https://huggingface.co/zjunlp">🤗 HF (Model)</a> •
+  <a href="https://www.modelscope.cn/organization/ZJUNLP?tab=model">🔭 Model Scope (Model)</a> •
+  <a href="https://www.wisemodel.cn/organization/zjunlp">🧊 Wise Model (Model)</a> 
+  <br>
+  <a href="https://huggingface.co/zjunlp">🤗 HF (Data)</a> •
+  <a href="https://drive.google.com">☁️ Google Drive (Data)</a>
+</p>
+
 </div>
 
 ## Table of Contents
