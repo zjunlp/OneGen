@@ -4,10 +4,13 @@ sys.path.append('src/')
 import torch
 import argparse
 from transformers import TrainingArguments
+from transformers import LlamaForCausalLM, Qwen2ForCausalLM, MistralForCausalLM
 
-from onegen import OneGenModel, Tokenizer, OneGenTrainer
+# from onegen import OneGenModel
+from onegen import Tokenizer, OneGenTrainer
+from onegen import create_onegen_model_class
 from onegen.trainer import OneGenTensorBoardCallback
-from onegen.config import parse_config, TrainingConfig, DataConfig, PaddingConfig, SpecialTokenConfig, OneGenConfig
+from onegen.config import parse_workflow, TrainingConfig, DataConfig, PaddingConfig, SpecialTokenConfig, OneGenConfig
 from onegen.dataset import AutoDataCollator, AutoDataset
 from onegen.util import FileReader, _print
 
@@ -27,7 +30,7 @@ def main():
     # Step 1. Load config
     training_config, data_train_config, data_db_config, \
         padding_config, special_token_config, onegen_config, resume_checkpoint_path = \
-            parse_config(args.workflow)
+            parse_workflow(args.workflow)
     
     # Step 2. Load tokenizer
     tokenizer = Tokenizer(
@@ -39,7 +42,10 @@ def main():
     special_token_config.update_tokenizer(tokenizer)
 
     # Step 3. Load model
-    model = OneGenModel.from_pretrained(
+    # model = OneGenModel.from_pretrained(
+    #     onegen_config.model_path, torch_dtype=torch.bfloat16
+    # )
+    model = create_onegen_model_class(eval(onegen_config.model_class)).from_pretrained(
         onegen_config.model_path, torch_dtype=torch.bfloat16
     )
     model.load_train_config(onegen_config=onegen_config)
@@ -76,7 +82,6 @@ def main():
             _print(f"resume from checkpoint `{resume_checkpoint_path}`")
     trainer.train(resume_from_checkpoint=resume_checkpoint_path) 
     trainer.save_model(training_config.output_dir)
-
 
 if __name__ == '__main__':
     main()

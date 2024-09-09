@@ -120,6 +120,7 @@ class OneGenConfig:
     model_path: str
     tokenizer_path: str
     model_type: str
+    model_class: str
 
     def __post_init__(self):
         assert self.loss_type in EnumContrastiveLoss.to_list(),  f"`{self.loss_type}` is not supported. The supported loss functions are in the list `{EnumContrastiveLoss.to_list()}`"
@@ -188,7 +189,8 @@ def parse_workflow(file_name:str) -> Tuple[TrainingConfig, DataConfig, DataConfi
         lambda_g=data['onegen']['lambda_g'],
         model_path=data['info-model']['model_path'],
         tokenizer_path=data['info-model']['tokenizer_path'],
-        model_type=data['info-model']['model_type']
+        model_type=data['info-model']['model_type'],
+        model_class=data['info-model']['model_class']
     )
 
     return training_config, data_train_config, data_db_config, padding_config, special_token_config, onegen_config, resume_checkpoint_path

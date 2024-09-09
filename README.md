@@ -7,16 +7,16 @@
 ![](https://img.shields.io/github/last-commit/zjunlp/OneGen?color=green) 
 
 <p align="center">
-  <a href="https://arxiv.org/">📄arXiv</a> •
-  <a href="https://x.com/">𝕏 Blog</a> •
-  <a href="https://huggingface.co/zjunlp">🤗 HF</a>
+  <a href="https://arxiv.org/">~~📄arXiv~~</a> •
+  <a href="https://x.com/">~~𝕏 Blog~~</a> •
+  <a href="https://huggingface.co/zjunlp">~~🤗 HF~~</a>
   <br>
-  <a href="https://huggingface.co/zjunlp">🤗 HF (Model)</a> •
-  <a href="https://www.modelscope.cn/organization/ZJUNLP?tab=model">🔭 Model Scope (Model)</a> •
-  <a href="https://www.wisemodel.cn/organization/zjunlp">🧊 Wise Model (Model)</a> 
+  <a href="https://huggingface.co/zjunlp">~~🤗 HF (Model)~~</a> •
+  <a href="https://www.modelscope.cn/organization/ZJUNLP?tab=model">~~🔭 Model Scope (Model)~~</a> •
+  <a href="https://www.wisemodel.cn/organization/zjunlp">~~🧊 Wise Model (Model)~~</a> 
   <br>
-  <a href="https://huggingface.co/zjunlp">🤗 HF (Data)</a> •
-  <a href="https://drive.google.com">☁️ Google Drive (Data)</a>
+  <a href="https://huggingface.co/zjunlp">~~🤗 HF (Data)~~</a> •
+  <a href="https://drive.google.com/drive/folders/1ByufnAyvsfnrIVJzMwOHql3lYFVy6IJx?usp=drive_link">☁️ Google Drive (Data)</a>
 </p>
 
 </div>
@@ -32,9 +32,8 @@
 
 ## 📋TODO
 
-- [ ] Support LoRA train
-- [ ] Refactor evaluation code
 - [ ] Upload model
+- [ ] Support LoRA train
 - [ ] Code documentation
 - [ ] Support vLLM inference
 - [ ] Support distributed embedding
@@ -68,7 +67,28 @@ pip install -r requirements.txt
 
 ## 🏃Quick Start
 
-### Training from scratch
+> The inference section focuses on running model predictions to get output results. The evaluation of these results is discussed in the Evaluation section. (Single-hop QA is an exception)
+
+### Download the data
+Download `train_data.tar.gz` and `eval_data.tar.gz` from [Google Drive](https://drive.google.com/drive/folders/1ByufnAyvsfnrIVJzMwOHql3lYFVy6IJx?usp=drive_link). After extracting, you will get two folders: `train_data` and `eval_data`. Move these two folders into the `data` directory. Use the following commands to extract the files:
+```bash
+tar -xzvf train_data.tar.gz
+tar -xzvf eval_data.tar.gz
+```
+
+### Download the model (Optional)
+<details> 
+<summary><b>Download the model (Optional)</b></summary> 
+The models are still being uploaded. We plan to make the trained models available on [Huggingface](https://huggingface.co/zjunlp), [WiseModel](https://www.wisemodel.cn/organization/zjunlp), and [ModelScope](https://www.modelscope.cn/organization/ZJUNLP?tab=model) platforms by September 12th. 
+</details>
+
+### Training from scratch (Optional)
+
+<details> 
+<summary><b>Training from scratch (Optional)</b></summary>
+
+We provide the training scripts for three tasks. If you are using a locally downloaded model, you can modify the `info-model` field in the `workflow/{task}/{model}.json` file. Update the `model_path` and `tokenizer_path` with the local paths. Note that the hyperparameters in the configuration files are set for 8xA800 GPUs. If you encounter OOM (Out of Memory) issues, please reduce the `per_device_train_batch_size`, `n_pos_per_sent`, `n_neg_per_pos`, and `max_length`.
+
 ```bash
 # Entity Linking
 deepspeed train.py --workflow workflow/entity_linking/llama2.json
@@ -77,9 +97,11 @@ deepspeed train.py --workflow workflow/self_rag/llama2.json
 # Multi-hop QA
 deepspeed train.py --workflow workflow/multi_hop_qa/llama2.json
 ```
+</details>
 
 ### Inference
 
+Here are the inference scripts for the Entity Linking and Multi-hop QA tasks. The inference script for Single-Hop QA is introduced in the next section.
 
 ```bash
 # Entity Linking (Need GPU)
@@ -91,19 +113,24 @@ python eval.py --config config/eval_config/multi_hop_qa/llama2.json
 
 ### Evaluation
 
+Below are the evaluation scripts for the Entity Linking and Multi-hop QA tasks. `/your/path/to/result.jsonl` is the file saved during the inference stage.
+
 ```bash
 # Entity Linking (CPU)
 bash scripts/eval_el.sh el /your/path/to/result.jsonl
-
-# Single-hop QA using Self-RAG (Need GPU)
-# [CUDA_VISIBLE_DEVICES] [MODE] [MODEL_PATH] [SAVE_TAG] [SAVED_DATASET_PATH] [N_DOC] [ENV] [SCORE]
-bash scripts/eval_self_rag.sh 0 always_retrieve /your/path/to/model model_tag saved_rank_path 5 true true
 
 # Multi-hop QA for HotpotQA dataset (CPU)
 bash scripts/eval_multi_hop_qa.sh /your/path/to/result.jsonl hotpotqa
 
 # Multi-hop QA for 2WIKI dataset (CPU)
 bash scripts/eval_multi_hop_qa.sh /your/path/to/result.jsonl 2wiki
+```
+
+Here is the evaluation for the Single-Hop QA task, mainly based on [Self-RAG](https://github.com/AkariAsai/self-rag):
+```bash
+# Single-hop QA using Self-RAG (Need GPU)
+# [CUDA_VISIBLE_DEVICES] [MODE] [MODEL_PATH] [SAVE_TAG] [SAVED_DATASET_PATH] [N_DOC] [ENV] [SCORE]
+bash scripts/eval_self_rag.sh 0 always_retrieve /your/path/to/model model_tag saved_rank_path 5 true true
 ```
 
 ## 🚩Citation

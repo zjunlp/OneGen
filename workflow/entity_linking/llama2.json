@@ -19,14 +19,14 @@
     },
     "info-data-db": {
         "file_path": "./data/train_data/entity_linking/db.jsonl",
-        "cache_file_path": "./data/train_data/entity_linking/db.cache",
+        "cache_file_path": "./data/train_data/entity_linking/db.cache.llama2",
         "repr_token": ["[SE]"],
         "mask_token_from_to": [],
         "templator": "DocumentTemplator"
     },
     "info-data-train": {
         "file_path": "./data/train_data/entity_linking/train.jsonl",
-        "cache_file_path": "./data/train_data/entity_linking/train.cache",
+        "cache_file_path": "./data/train_data/entity_linking/train.cache.llama2",
         "repr_token": ["[LK]"],
         "mask_token_from_to": [],
         "templator": "EntityLinking_Llama2Templator"
@@ -35,6 +35,7 @@
         "model_path": "meta-llama/Llama-2-7b-chat-hf",
         "tokenizer_path": "meta-llama/Llama-2-7b-chat-hf",
         "model_type": "llama2",
+        "model_class": "LlamaForCausalLM",
         "max_length": 1300,
         "padding_side": "right",
         "padding_label_id": -100,
