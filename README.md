@@ -5,7 +5,7 @@
 <p align="center">
   <a href="https://arxiv.org/">📄arXiv</a> •
   <a href="https://x.com/">𝕏 Blog</a> •
-  <a href="https://huggingface.co/">🤗 HF</a>
+  <a href="https://huggingface.co/">🤗 HF</a> •
   <a href="https://drive.google.com">☁️ Google Drive</a>
 </p>
 
@@ -61,7 +61,7 @@ pip install -r requirements.txt
 
 ## 🏃Quick Start
 
-
+### Training from scratch
 ```bash
 # Entity Linking
 deepspeed train.py --workflow workflow/entity_linking/llama2.json
@@ -71,12 +71,32 @@ deepspeed train.py --workflow workflow/self_rag/llama2.json
 deepspeed train.py --workflow workflow/multi_hop_qa/llama2.json
 ```
 
-```bash
-bash eval_scripts/eval_self_rag.sh
-```
+### Inference
+
 
 ```bash
-bash eval_scripts/eval_multi_hop.sh
+# Entity Linking (Need GPU)
+python eval.py --config config/eval_config/entity_linking/llama2_wo_pkl.json
+# Multi-hop QA (Need GPU)
+python eval.py --config config/eval_config/multi_hop_qa/llama2.json
+```
+
+
+### Evaluation
+
+```bash
+# Entity Linking (CPU)
+bash scripts/eval_el.sh el /your/path/to/result.jsonl
+
+# Single-hop QA using Self-RAG (Need GPU)
+# [CUDA_VISIBLE_DEVICES] [MODE] [MODEL_PATH] [SAVE_TAG] [SAVED_DATASET_PATH] [N_DOC] [ENV] [SCORE]
+bash scripts/eval_self_rag.sh 0 always_retrieve /your/path/to/model model_tag saved_rank_path 5 true true
+
+# Multi-hop QA for HotpotQA dataset (CPU)
+bash scripts/eval_multi_hop_qa.sh /your/path/to/result.jsonl hotpotqa
+
+# Multi-hop QA for 2WIKI dataset (CPU)
+bash scripts/eval_multi_hop_qa.sh /your/path/to/result.jsonl 2wiki
 ```
 
 ## 🚩Citation

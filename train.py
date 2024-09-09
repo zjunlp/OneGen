@@ -80,5 +80,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-    # deepspeed train.py --workflow workflows/entity_linking/llama2.json
-    # deepspeed train.py --workflow workflows/self_rag/llama2.json

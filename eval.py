@@ -34,5 +34,7 @@ def main():
     # Step 3. Run
     evaluator.run(adapter, output_file_path=output_file_path)
 
+    # Step 4. Metric
+
 if __name__ == '__main__':
     main()
