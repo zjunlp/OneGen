@@ -7,19 +7,27 @@
 ![](https://img.shields.io/github/last-commit/zjunlp/OneGen?color=green) 
 
 <p align="center">
-  <a>📄arXiv</a> •
-  <a>𝕏 Blog</a> •
-  <a>🤗 HF</a>
-  <br>
-  <a>🤗 HF (Model)</a> •
-  <a>🔭 Model Scope (Model)</a> •
-  <a>🧊 Wise Model (Model)</a> 
-  <br>
-  <a>🤗 HF (Data)</a> •
   <a href="https://drive.google.com/drive/folders/1ByufnAyvsfnrIVJzMwOHql3lYFVy6IJx?usp=drive_link">☁️ Google Drive (Data)</a>
+  <br>
+  <a href="https://arxiv.org/abs/2409.05152">📄arXiv</a> •
+  <a>𝕏 Blog</a> •
+  <a>🌐 Web</a>
+  <br>
+  <br>
+  <a>🤗 HF (Model)👇</a> •
+  <a>🔭 Model Scope (Model)👇</a> •
+  <a>🧊 Wise Model (Model)👇</a> 
 </p>
 
+| 🎯 Task Name      | 🤗 HuggingFace                              | 🔭 ModelScope                               | 🧊 WiseModel                                |
+| -------------- | ---------------------------------------- | ---------------------------------------- | ---------------------------------------- |
+| Entity Linking | [Llama2-7B](https://huggingface.co/zjunlp/OneGen-EntityLinking-Llama2-7B) | [Llama2-7B](https://www.modelscope.cn/models/ZJUNLP/OneGen-EntityLinking-Llama2-7B) | [Llama2-7B](https://www.wisemodel.cn/models/zjunlp/OneGen-EntityLinking-Llama2-7B) |
+| Single-hop QA  | [Llama2-7B](https://huggingface.co/zjunlp/OneGen-SelfRAG-Llama2-7B) | [Llama2-7B](https://www.modelscope.cn/models/ZJUNLP/OneGen-SelfRAG-Llama2-7B) | [Llama2-7B](https://www.wisemodel.cn/models/zjunlp/OneGen-SelfRAG-Llama2-7B) |
+| Multi-hop QA   | [Llama2-7B](https://huggingface.co/zjunlp/OneGen-MultiHop-Llama2-7B) | [Llama2-7B](https://www.modelscope.cn/models/ZJUNLP/OneGen-MultiHop-Llama2-7B) | [Llama2-7B](https://www.wisemodel.cn/models/zjunlp/OneGen-MultiHop-Llama2-7B) |
 </div>
+
+
+
 
 ## Table of Contents
 
@@ -32,11 +40,11 @@
 
 ## 📋TODO
 
-- [ ] Upload model
 - [ ] Support LoRA train
 - [ ] Code documentation
 - [ ] Support vLLM inference
 - [ ] Support distributed embedding
+- [ ] Gradio
 
 ## 👀Overview
 
@@ -67,7 +75,7 @@ pip install -r requirements.txt
 
 ## 🏃Quick Start
 
-> The inference section focuses on running model predictions to get output results. The evaluation of these results is discussed in the Evaluation section. (Single-hop QA is an exception)
+> The inference section focuses on running model predictions to get output results (Single-hop QA is an exception). The evaluation of these results is discussed in the Evaluation section. 
 
 ### Download the data
 
@@ -77,18 +85,28 @@ tar -xzvf train_data.tar.gz
 tar -xzvf eval_data.tar.gz
 ```
 
-### Download the model (Optional)
+### Download the trained model (Optional)
 
 <details> 
-<summary><b>Download the model (Optional)</b></summary> 
+<summary><b>Download the trained model (Optional)</b></summary> 
   
-The models are still being uploaded. We plan to make the trained models available on [Huggingface](https://huggingface.co/zjunlp), [WiseModel](https://www.wisemodel.cn/organization/zjunlp), and [ModelScope](https://www.modelscope.cn/organization/ZJUNLP?tab=model) platforms by September 12th. 
+The model weights trained on three tasks have been made public and are available for download on three platforms: `🤗Huggingface`, `🔭ModelScope`, and `🧊WiseModel`. For detailed information, please refer to the table below:
+| 🎯 Task Name      | 🤗 HuggingFace                              | 🔭 ModelScope                               | 🧊 WiseModel                                |
+| -------------- | ---------------------------------------- | ---------------------------------------- | ---------------------------------------- |
+| Entity Linking | [Llama2-7B](https://huggingface.co/zjunlp/OneGen-EntityLinking-Llama2-7B) | [Llama2-7B](https://www.modelscope.cn/models/ZJUNLP/OneGen-EntityLinking-Llama2-7B) | [Llama2-7B](https://www.wisemodel.cn/models/zjunlp/OneGen-EntityLinking-Llama2-7B) |
+| Single-hop QA  | [Llama2-7B](https://huggingface.co/zjunlp/OneGen-SelfRAG-Llama2-7B) | [Llama2-7B](https://www.modelscope.cn/models/ZJUNLP/OneGen-SelfRAG-Llama2-7B) | [Llama2-7B](https://www.wisemodel.cn/models/zjunlp/OneGen-SelfRAG-Llama2-7B) |
+| Multi-hop QA   | [Llama2-7B](https://huggingface.co/zjunlp/OneGen-MultiHop-Llama2-7B) | [Llama2-7B](https://www.modelscope.cn/models/ZJUNLP/OneGen-MultiHop-Llama2-7B) | [Llama2-7B](https://www.wisemodel.cn/models/zjunlp/OneGen-MultiHop-Llama2-7B) |
+
 </details>
 
-### Training from scratch (Optional)
+
+> [!NOTE]
+> It is worth noting that for the Entity Linking task, we have pre-stored the entity embeddings. Click [here](https://huggingface.co/zjunlp/OneGenEmbedding/blob/main/OneGen-EntityLinking-Llama2-7B-Embedding.pkl) to download them.
+
+### Training model from scratch (Optional)
 
 <details> 
-<summary><b>Training from scratch (Optional)</b></summary>
+<summary><b>Training model from scratch (Optional)</b></summary>
 
 We provide the training scripts for three tasks. If you are using a locally downloaded model, you can modify the `info-model` field in the `workflow/{task}/{model}.json` file. Update the `model_path` and `tokenizer_path` with the local paths. Note that the hyperparameters in the configuration files are set for 8xA800 GPUs. If you encounter OOM (Out of Memory) issues, please reduce the `per_device_train_batch_size`, `n_pos_per_sent`, `n_neg_per_pos`, and `max_length`.
 
@@ -104,7 +122,7 @@ deepspeed train.py --workflow workflow/multi_hop_qa/llama2.json
 
 ### Inference
 
-Here are the inference scripts for the Entity Linking and Multi-hop QA tasks. The inference script for Single-Hop QA is introduced in the next section.
+Here are the inference scripts for the Entity Linking and Multi-hop QA tasks. The inference script for Single-Hop QA is introduced in the next section. You can modify the values of fields such as `model_path`, `tokenizer_path`, `file`, and `output_file_path` in `{config}/{eval_config}/{task}/{config}.json` as needed.
 
 ```bash
 # Entity Linking (Need GPU)
@@ -141,6 +159,13 @@ bash scripts/eval_self_rag.sh 0 always_retrieve /your/path/to/model model_tag sa
 If this work is helpful, please kindly cite as:
 
 ```bibtex
-
+@misc{zhang2024onegen,
+      title={OneGen: Efficient One-Pass Unified Generation and Retrieval for LLMs}, 
+      author={Jintian Zhang and Cheng Peng and Mengshu Sun and Xiang Chen and Lei Liang and Zhiqiang Zhang and Jun Zhou and Huajun Chen and Ningyu Zhang},
+      year={2024},
+      eprint={2409.05152},
+      archivePrefix={arXiv},
+      primaryClass={cs.CL},
+      url={https://arxiv.org/abs/2409.05152}, 
+}
 ```
-
