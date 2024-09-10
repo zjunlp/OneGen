@@ -10,7 +10,7 @@
   <a href="https://drive.google.com/drive/folders/1ByufnAyvsfnrIVJzMwOHql3lYFVy6IJx?usp=drive_link">☁️ Google Drive (Data)</a>
   <br>
   <a href="https://arxiv.org/abs/2409.05152">📄arXiv</a> •
-  <a>𝕏 Blog</a> •
+  <a href="https://x.com/zxlzr/status/1833433788036354523">𝕏 Blog</a> •
   <a>🌐 Web</a>
   <br>
   <br>
