@@ -50,7 +50,7 @@
 
 We introduce a **One**-pass **Gen**eration and retrieval framework (**OneGen**) for fine-tuning LLMs on generation, retrieval, or hybrid tasks. Our core idea is to integrate generation and retrieval to the same context by allocating the retrieval task to *retirval tokens* generated in an autoregressive manner, thus enabling LLM to perform both tasks in a single forward pass.
 
-The following figure illustrates the training process. We fisrt introduce the concept named `roles of tokens in LLMs`. A token $x_i$ is the basic unit processed by an LLM. Token in the input of an LLM serves three different roles:
+The following figure illustrates the training process. We first introduce the concept named `roles of tokens in LLMs`. A token $x_i$ is the basic unit processed by an LLM. Token in the input of an LLM serves three different roles:
 - *Generating next token*, noted as $role(x_i)=\texttt{GEN}$.
 - *Providing context information*, noted as $role(x_i)=\texttt{CTX}$.
 - *Representing a sentence*, noted as $role(x_i)=\texttt{RET}$.
