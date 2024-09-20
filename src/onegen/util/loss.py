@@ -48,7 +48,7 @@ def info_nce_loss(
     assert len(anchor_mention_representation) == len(description_mention_positive_representation)
     assert len(anchor_mention_representation) * onegen_config.n_neg_per_pos == len(description_mention_negative_representation)
 
-    # Step 2. Concate postive and negative
+    # Step 2. Concate positive and negative
     description_mention_representation = torch.cat(
         (description_mention_positive_representation,description_mention_negative_representation), dim=0
     ) 
@@ -94,7 +94,7 @@ def bpr_loss(
     assert len(anchor_mention_representation) * onegen_config.n_neg_per_pos == len(description_mention_negative_representation),\
         f"{anchors}\n{len(anchor_mention_representation)} * {onegen_config.n_neg_per_pos} != {len(description_mention_negative_representation)}"
 
-    # Step 3. Concate postive and negative
+    # Step 3. Concate positive and negative
     description_mention_representation = torch.cat(
         (description_mention_positive_representation,description_mention_negative_representation), dim=0
     ) 
