@@ -15,12 +15,6 @@ from onegen.util import FileReader, _print, sim_matrix, FileWriter
 from onegen.util import DEFAULT_GENERATION_CONFIG, MAX_NEW_TOKENS, MAX_RETRIEVAL_CNT
 from onegen.dataset import padding_input_ids
 
-
-
-"""
-TODO: Backend-generate-if prompt那边好像有点问题？
-"""
-
 class AutoAddLogitsProcessor(LogitsProcessor):
     def __init__(self, rules:Union[List[int], List[List[int]]], nexts: Union[int, List[int]]):
         # List[int], int
@@ -199,7 +193,7 @@ class Backend:
 
         # post handle
         past_key_values = generation_output.past_key_values
-        state:bool = generation_output.sequences[0][-1] in self.generator_config.stop_token_id_list
+        state:bool = generation_output.sequences[0][-1] == self.generator_tokenizer.eos_token_id
         if prompt:
             output = self.generator_tokenizer.decode(
                 generation_output.sequences[0]
