@@ -10,6 +10,7 @@ import jsonlines
 from onegen.templator import DocumentTemplator
 import random
 from typing import *
+from huggingface_hub import hf_hub_download
 
 class AutoDataset(torch.utils.data.Dataset):
 
@@ -71,6 +72,7 @@ class AutoDataset(torch.utils.data.Dataset):
         cache_file_path = self._db_file_config.cache_file_path
         file_path = self._db_file_config.file_path
         max_length = self._db_file_config.max_length
+        _hf_path:Dict = self._db_file_config.hf_path
         _repr_token:List[str] = self._db_file_config.repr_token
         _mask_token_from_to:List = self._db_file_config.mask_token_from_to
         special_token_id_list_for_repr:List = [self.tokenizer.convert_tokens_to_ids(token) for token in _repr_token]
@@ -99,6 +101,9 @@ class AutoDataset(torch.utils.data.Dataset):
             return
         
         # read file_path and then tokenize it
+        if not FileReader.is_existed(file_path) and _hf_path != None:
+            _print(f"The local database file `{file_path}` is not existed. Now trying to download the `{_hf_path['name']}` from the huggingface repo `{_hf_path['repo']}`")
+            file_path = hf_hub_download(repo_id=_hf_path['repo'], filename=_hf_path['name'], repo_type="dataset")
         assert FileReader.is_existed(file_path), \
             f"The database file `{file_path}` is not existed."
         _print(f"reading database data from `{file_path}` ...")
@@ -154,6 +159,7 @@ class AutoDataset(torch.utils.data.Dataset):
         cache_file_path = self._train_file_config.cache_file_path
         file_path = self._train_file_config.file_path
         max_length = self._train_file_config.max_length
+        _hf_path:Dict = self._train_file_config.hf_path
         _repr_token_list:List[str] = self._train_file_config.repr_token
         _mask_token_from_to:List = self._train_file_config.mask_token_from_to
         special_token_id_list_for_repr:List = [self.tokenizer.convert_tokens_to_ids(token) for token in _repr_token_list]
@@ -182,6 +188,9 @@ class AutoDataset(torch.utils.data.Dataset):
             return
         
         # read file_path and tokenize it
+        if not FileReader.is_existed(file_path) and _hf_path != None:
+            _print(f"The local training file `{file_path}` is not existed. Now trying to download the `{_hf_path['name']}` from the huggingface repo `{_hf_path['repo']}`")
+            file_path = hf_hub_download(repo_id=_hf_path['repo'], filename=_hf_path['name'], repo_type="dataset")
         assert FileReader.is_existed(file_path), \
             f"The train file `{file_path}` is not existed."
         _print(f"reading training data from `{file_path}`")

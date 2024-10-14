@@ -22,14 +22,22 @@
         "cache_file_path": "./data/train_data/entity_linking/db.cache.llama2",
         "repr_token": ["[SE]"],
         "mask_token_from_to": [],
-        "templator": "DocumentTemplator"
+        "templator": "DocumentTemplator",
+        "hf_path": {
+            "repo": "zjunlp/OneGen-TrainDataset-EntityLinking",
+            "name": "db.jsonl"
+        }
     },
     "info-data-train": {
         "file_path": "./data/train_data/entity_linking/train.jsonl",
         "cache_file_path": "./data/train_data/entity_linking/train.cache.llama2",
         "repr_token": ["[LK]"],
         "mask_token_from_to": [],
-        "templator": "EntityLinking_Llama2Templator"
+        "templator": "EntityLinking_Llama2Templator",
+        "hf_path": {
+            "repo": "zjunlp/OneGen-TrainDataset-EntityLinking",
+            "name": "train.jsonl"
+        }
     },
     "info-model":{
         "model_path": "meta-llama/Llama-2-7b-chat-hf",

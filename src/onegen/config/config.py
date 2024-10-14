@@ -39,6 +39,7 @@ class DataConfig:
     repr_token: List
     max_length: int
     templator: Any
+    hf_path: Dict
 
     def __post_init__(self):
         if isinstance(self.mask_token_from_to, list):
@@ -154,7 +155,8 @@ def parse_workflow(file_name:str) -> Tuple[TrainingConfig, DataConfig, DataConfi
         mask_token_from_to=data['info-data-db']['mask_token_from_to'],
         repr_token=data['info-data-db']['repr_token'],
         max_length=max_length,
-        templator=eval(data['info-data-db']['templator'])
+        templator=eval(data['info-data-db']['templator']),
+        hf_path=data['info-data-db']['hf_path']
     )
 
     data_train_config = DataConfig(
@@ -163,7 +165,8 @@ def parse_workflow(file_name:str) -> Tuple[TrainingConfig, DataConfig, DataConfi
         mask_token_from_to=data['info-data-train']['mask_token_from_to'],
         repr_token=data['info-data-train']['repr_token'],
         max_length=max_length,
-        templator=eval(data['info-data-train']['templator'])
+        templator=eval(data['info-data-train']['templator']),
+        hf_path=data['info-data-train']['hf_path']
     )
 
     padding_config = PaddingConfig(

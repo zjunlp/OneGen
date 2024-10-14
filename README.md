@@ -85,6 +85,8 @@ tar -xzvf train_data.tar.gz
 tar -xzvf eval_data.tar.gz
 ```
 
+Please note that the training data we are using is available on Hugging Face, so you do not need to download `train_data.tar.gz`. Just run the training scripts!
+
 ### Download the trained model (Optional)
 
 <details> 

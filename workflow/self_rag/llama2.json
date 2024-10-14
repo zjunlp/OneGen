@@ -37,14 +37,22 @@
         "cache_file_path": "./data/train_data/self_rag/db.cache.llama2",
         "repr_token": ["[Document Fragment Representation]"],
         "mask_token_from_to": [],
-        "templator": "DocumentTemplator"
+        "templator": "DocumentTemplator",
+        "hf_path": {
+            "repo": "zjunlp/OneGen-TrainDataset-SelfRAG",
+            "name": "db.jsonl"
+        }
     },
     "info-data-train": {
         "file_path": "./data/train_data/self_rag/train.jsonl",
         "cache_file_path": "./data/train_data/self_rag/train.cache.llama2",
         "repr_token": ["[Question Representation]"],
         "mask_token_from_to": [["<paragraph>", "</paragraph>"]],
-        "templator": "DocumentTemplator"
+        "templator": "DocumentTemplator",
+        "hf_path": {
+            "repo": "zjunlp/OneGen-TrainDataset-SelfRAG",
+            "name": "train.jsonl"
+        }
     },
     "info-model":{
         "model_path": "meta-llama/Llama-2-7b-chat-hf",

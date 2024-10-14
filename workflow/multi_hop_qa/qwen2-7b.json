@@ -23,14 +23,22 @@
         "cache_file_path": "./data/train_data/multi_hop_qa/db.cache.qwen2",
         "repr_token": ["[Document Fragment Representation]"],
         "mask_token_from_to": [],
-        "templator": "DocumentTemplator"
+        "templator": "DocumentTemplator",
+        "hf_path": {
+            "repo": "zjunlp/OneGen-TrainDataset-MultiHopQA",
+            "name": "db.jsonl"
+        }
     },
     "info-data-train": {
         "file_path": "./data/train_data/multi_hop_qa/train.jsonl",
         "cache_file_path": "./data/train_data/multi_hop_qa/train.cache.qwen2",
         "repr_token": ["[Question Representation]"],
         "mask_token_from_to": [["<paragraph>", "</paragraph>"]],
-        "templator": "Qwen2Templator"
+        "templator": "Qwen2Templator",
+        "hf_path": {
+            "repo": "zjunlp/OneGen-TrainDataset-MultiHopQA",
+            "name": "train.jsonl"
+        }
     },
     "info-model":{
         "model_path": "Qwen/Qwen2-7B-Instruct",
