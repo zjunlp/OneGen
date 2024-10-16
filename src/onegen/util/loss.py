@@ -15,7 +15,7 @@ def sim_matrix(a, b, eps=1e-8):
     return sim_mt
 
 def info_nce_loss(
-    hidden_states, 
+    hidden_state, 
     onegen_config,
     embedding_index: Tuple[torch.LongTensor, torch.LongTensor], 
     embedding_index_split_flag: List
