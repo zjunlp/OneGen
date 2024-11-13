@@ -18,6 +18,7 @@ class InferenceConfig:
     embed_batch_size:int
     sentence_connector:str
     max_retrieval_cnt:int
+    use_faiss: bool
 
     # only for database
     skip_repr_token_cnt:int
@@ -36,6 +37,8 @@ class InferenceConfig:
             self.max_retrieval_cnt:int = MAX_RETRIEVAL_CNT
         if self.skip_repr_token_cnt == None:
             self.skip_repr_token_cnt:int = 0
+        if self.use_faiss == None:
+            self.use_faiss:bool = False
 
 @dataclass
 class FileConfig:

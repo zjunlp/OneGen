@@ -43,7 +43,8 @@
         "embed_batch_size": 64,
         "max_retrieval_cnt": null,
         "skip_repr_token_cnt": 1,
-        "sentence_connector": "[Document Fragment Representation]"
+        "sentence_connector": "[Document Fragment Representation]",
+        "use_faiss": false
     },
     "other": {
         "input_template": "You are good at multi-step reasoning in QA. For complex questions, break down the process. Generate and answer sub-questions step-by-step, using retrieved documents at each stage. Output the final answer wrapped by <FINAL-ANSWER></FINAL-ANSWER>. Here is a question: {input}",

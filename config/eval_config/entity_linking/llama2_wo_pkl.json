@@ -43,7 +43,8 @@
         "embed_batch_size": 64,
         "max_retrieval_cnt": null,
         "skip_repr_token_cnt": 1,
-        "sentence_connector": ""
+        "sentence_connector": "",
+        "use_faiss": false
     },
     "other": {
         "rules": [

@@ -81,7 +81,8 @@ def parse_eval_config(file_name:str) -> Tuple[ComponentConfig, ComponentConfig, 
         embed_batch_size=meta_data["inference"]['embed_batch_size'],
         sentence_connector=meta_data["inference"]['sentence_connector'],
         max_retrieval_cnt=meta_data["inference"]['max_retrieval_cnt'],
-        skip_repr_token_cnt=meta_data["inference"]['skip_repr_token_cnt']
+        skip_repr_token_cnt=meta_data["inference"]['skip_repr_token_cnt'],
+        use_faiss=meta_data["inference"]['use_faiss']
     )
 
     if "other" in meta_data and isinstance(meta_data['other'], dict):

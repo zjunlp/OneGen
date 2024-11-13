@@ -133,6 +133,7 @@ class EntityLinkingAdapter(Adapter):
                 sentence_connector=self.inference_config.sentence_connector,
                 max_retrieval_cnt=self.inference_config.max_retrieval_cnt,
                 skip_repr_token_cnt=self.inference_config.skip_repr_token_cnt,
+                use_faiss=self.inference_config.use_faiss,
             ))
             pbar.update(1)
         pbar.close()
@@ -236,6 +237,7 @@ class MultiHopQAAdapter(Adapter):
                 sentence_connector=self.inference_config.sentence_connector,
                 max_retrieval_cnt=self.inference_config.max_retrieval_cnt,
                 skip_repr_token_cnt=self.inference_config.skip_repr_token_cnt,
+                use_faiss=self.inference_config.use_faiss,
             ))
             pbar.update(1)
         pbar.close()

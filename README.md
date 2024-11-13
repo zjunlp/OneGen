@@ -124,7 +124,9 @@ deepspeed train.py --workflow workflow/multi_hop_qa/llama2.json
 
 ### Inference
 
-Here are the inference scripts for the Entity Linking and Multi-hop QA tasks. The inference script for Single-Hop QA is introduced in the next section. You can modify the values of fields such as `model_path`, `tokenizer_path`, `file`, and `output_file_path` in `{config}/{eval_config}/{task}/{config}.json` as needed.
+Here are the inference scripts for the Entity Linking and Multi-hop QA tasks. The inference script for Single-Hop QA is introduced in the next section. You can modify the values of fields such as `model_path`, `tokenizer_path`, `file`, and `output_file_path` in `{config}/{eval_config}/{task}/{config}.json` as needed. 
+
+During the model inference process, we now support using [Faiss](https://github.com/facebookresearch/faiss) as the vector retrieval engine. You just need to set the `use_faiss` field in the `inference` section of the `config.json` file to true.
 
 ```bash
 # Entity Linking (Need GPU)

@@ -11,7 +11,7 @@ import re
 
 import sys
 sys.path.append('../')
-from onegen.util import FileReader, _print, sim_matrix, FileWriter
+from onegen.util import FileReader, _print, sim_matrix, faiss_sim_matrix, FileWriter
 from onegen.util import DEFAULT_GENERATION_CONFIG, MAX_NEW_TOKENS, MAX_RETRIEVAL_CNT
 from onegen.dataset import padding_input_ids
 
@@ -227,6 +227,7 @@ class Backend:
         mapping_func=None,
         sentence_connector:str="",
         skip_repr_token_cnt:int=0,
+        use_faiss:bool=False,
     ) -> Tuple[Union[str, List[str]], torch.Tensor]: 
         # ATTENTION: 
         # if the doc_embedding is not None, we must make sure that candidate_list and doc_embedding have the one-to-one correspondence.
@@ -238,9 +239,14 @@ class Backend:
             doc_embedding:torch.Tensor = self.encode(candidate_list, batch_size, sentence_connector=sentence_connector, skip_repr_token_cnt=skip_repr_token_cnt)  # [n, dim]
         assert len(doc_embedding) == len(candidate_list)
         # 3. calculating similarity
-        scores = sim_matrix(query_embedding, doc_embedding) # [1,n]
-        index = int(torch.argmax(scores))
-        return meta_candidate_list[index], doc_embedding
+        if use_faiss:
+            # use faiss when retrieve
+            nearest_idx = faiss_sim_matrix(query_embedding, doc_embedding)
+        else:
+            # without faiss
+            scores = sim_matrix(query_embedding, doc_embedding) # [1,n]
+            nearest_idx = int(torch.argmax(scores))
+        return meta_candidate_list[nearest_idx], doc_embedding
 
 class OneGen(Backend):
     def __init__(
@@ -413,7 +419,8 @@ class OneGen(Backend):
         sentence_connector:str="",
         past_key_values=None,
         mapping_func=None,
-        skip_repr_token_cnt:int=0
+        skip_repr_token_cnt:int=0,
+        use_faiss:bool=False,
     ) -> Tuple[Union[str, List[str]], torch.Tensor]:
         # we just modify the query embedding
         # 1. embedding query
@@ -445,15 +452,20 @@ class OneGen(Backend):
             )  # [n, dim]
         
         # 3. calculating similarity
-        scores = sim_matrix(query_embedding, doc_embedding) # [1,n]
-        index = int(torch.argmax(scores))
+        if use_faiss:
+            # use faiss
+            nearest_idx = faiss_sim_matrix(query_embedding, doc_embedding)
+        else:
+            # without faiss
+            scores = sim_matrix(query_embedding, doc_embedding) # [1,n]
+            nearest_idx = int(torch.argmax(scores))
 
         if len(doc_embedding) != len(candidate_list):
             # just used for multi hop qa
             assert mapping_func != None and len(doc_embedding) > len(candidate_list)
-            return mapping_func(query, candidate_list, meta_candidate_list, doc_embedding, index)
+            return mapping_func(query, candidate_list, meta_candidate_list, doc_embedding, nearest_idx)
         else:
-            return meta_candidate_list[index], doc_embedding
+            return meta_candidate_list[nearest_idx], doc_embedding
 
 class Evaluator:
     """
@@ -546,6 +558,7 @@ class RAGEvaluator(Evaluator):
         sentence_connector:str="",
         max_retrieval_cnt:int=MAX_RETRIEVAL_CNT,
         skip_repr_token_cnt:int=0,
+        use_faiss:bool=False,
     ) -> Tuple[str, str]:
         if generation_config == None:
             generation_config: GenerationConfig = DEFAULT_GENERATION_CONFIG
@@ -569,7 +582,8 @@ class RAGEvaluator(Evaluator):
                 sentence_connector=sentence_connector,
                 past_key_values=output['past_key_values'],
                 mapping_func=self.mapping_func,
-                skip_repr_token_cnt=skip_repr_token_cnt
+                skip_repr_token_cnt=skip_repr_token_cnt,
+                use_faiss=use_faiss,
             )
             if isinstance(document, list):
                 document = "".join(document)
@@ -652,7 +666,8 @@ class EntityLinkingEvaluator(Evaluator):
         doc_embedding_label:List[str]=None,
         sentence_connector:str="",
         max_retrieval_cnt:int=MAX_RETRIEVAL_CNT,
-        skip_repr_token_cnt:int=0
+        skip_repr_token_cnt:int=0,
+        use_faiss:bool=False,
     ):
         # 1. generating when encounter eos token
         output:dict = self.backend.generate(
@@ -706,8 +721,13 @@ class EntityLinkingEvaluator(Evaluator):
             )
 
         # 6. calculate similarity
-        scores = sim_matrix(embedding, doc_embedding)    # [n_repr_, n_doc]
-        arg_max_index = torch.argmax(scores, dim=1)    # [n_repr]
+        if use_faiss:
+            # use faiss when retrieve
+            arg_max_index = faiss_sim_matrix(embedding, doc_embedding)
+        else:
+            # without faiss
+            scores = sim_matrix(embedding, doc_embedding)    # [n_repr_, n_doc]
+            arg_max_index = torch.argmax(scores, dim=1)    # [n_repr]
 
         return {
             "output": output['increment'],
@@ -808,7 +828,8 @@ class EntityDisambiguationEvaluator(EntityLinkingEvaluator):
         doc_embedding_label:List[str]=None,
         sentence_connector:str="",
         max_retrieval_cnt:int=MAX_RETRIEVAL_CNT,
-        skip_repr_token_cnt:int=0
+        skip_repr_token_cnt:int=0,
+        use_faiss:bool=False,
     ):
         # We don't need to do generate for entity disambiguation task.
         # 1. prefill the prompt to get the hidden_state
@@ -861,8 +882,13 @@ class EntityDisambiguationEvaluator(EntityLinkingEvaluator):
             )
 
         # 6. calculate similarity
-        scores = sim_matrix(embedding, doc_embedding)    # [n_repr_, n_doc]
-        arg_max_index = torch.argmax(scores, dim=1)    # [n_repr]
+        if use_faiss:
+            # use faiss when retrieve
+            arg_max_index = faiss_sim_matrix(embedding, doc_embedding)
+        else: 
+            # without faiss
+            scores = sim_matrix(embedding, doc_embedding)    # [n_repr_, n_doc]
+            arg_max_index = torch.argmax(scores, dim=1)    # [n_repr]
 
         return {
             "output": output['increment'],

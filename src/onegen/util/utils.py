@@ -7,9 +7,54 @@ import pickle
 from tqdm import tqdm
 import torch.distributed as dist
 import torch
+import faiss
+
 
 def _print(message:Any):
     print(f"[{time.ctime()}] {message}")
+
+
+def faiss_sim_matrix(query_embedding, doc_embedding):
+    """
+    Calculate similarity matrix using FAISS with inner product (cosine similarity proxy).
+    
+    query_embedding: Tensor, shape [1, dim]
+    doc_embedding: Tensor, shape [n_doc, dim]
+    max_retrieval_cnt: Maximum number of nearest documents to retrieve. If None, retrieve all documents.
+    """
+    # Normalize embeddings to use inner product as cosine similarity
+    query_embedding = query_embedding / query_embedding.norm(dim=1, keepdim=True)
+
+    # Seperate doc_embedding to multiple GPUs, regarding doc usually has a large size
+    num_gpus = torch.cuda.device_count()
+    doc_chunks = torch.chunk(doc_embedding, num_gpus)  # Break doc_embedding down into sub-tensors
+    normalized_chunks = []
+
+    for i in range(num_gpus):
+        with torch.cuda.device(i):
+            chunk = doc_chunks[i].to(i)  # Moving torches
+            normalized_chunk = chunk / chunk.norm(dim=1, keepdim=True)  # Normalization
+            normalized_chunks.append(normalized_chunk.cpu())  # Move the normalized tensors back to CPU, since the total size is large
+
+    # Gather
+    doc_embedding = torch.cat(normalized_chunks, dim=0)
+
+    # Create faiss index with inner product metric
+    res = faiss.StandardGpuResources()
+    config = faiss.GpuIndexFlatConfig()
+    config.device = 0 
+
+    # Create inner product indexes on GPU
+    index = faiss.GpuIndexFlatIP(res, doc_embedding.shape[1], config)
+    doc_embedding = doc_embedding.to(torch.float32) # Make sure doc_embedding is float32
+    index.add(doc_embedding.numpy())  # FAISS needs NumPy array
+
+    # Search for the nearest documents based on inner product
+    query_embedding = query_embedding.to(torch.float32) # Make sure query_embedding is float32
+    _, nearest_idx = index.search(query_embedding.cpu().numpy(), 1)
+    
+    return nearest_idx[0]  # Return the indices of the nearest documents
+
 
 class FileWriter:
     @classmethod
