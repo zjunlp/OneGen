@@ -163,13 +163,27 @@ bash scripts/eval_self_rag.sh 0 always_retrieve /your/path/to/model model_tag sa
 If this work is helpful, please kindly cite as:
 
 ```bibtex
-@misc{zhang2024onegen,
-      title={OneGen: Efficient One-Pass Unified Generation and Retrieval for LLMs}, 
-      author={Jintian Zhang and Cheng Peng and Mengshu Sun and Xiang Chen and Lei Liang and Zhiqiang Zhang and Jun Zhou and Huajun Chen and Ningyu Zhang},
-      year={2024},
-      eprint={2409.05152},
-      archivePrefix={arXiv},
-      primaryClass={cs.CL},
-      url={https://arxiv.org/abs/2409.05152}, 
+@inproceedings{EMNLP24_OneGen,
+    title = "{O}ne{G}en: Efficient One-Pass Unified Generation and Retrieval for {LLM}s",
+    author = "Zhang, Jintian  and
+      Peng, Cheng  and
+      Sun, Mengshu  and
+      Chen, Xiang  and
+      Liang, Lei  and
+      Zhang, Zhiqiang  and
+      Zhou, Jun  and
+      Chen, Huajun  and
+      Zhang, Ningyu",
+    editor = "Al-Onaizan, Yaser  and
+      Bansal, Mohit  and
+      Chen, Yun-Nung",
+    booktitle = "Findings of the Association for Computational Linguistics: EMNLP 2024",
+    month = nov,
+    year = "2024",
+    address = "Miami, Florida, USA",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/2024.findings-emnlp.237",
+    pages = "4088--4119",
 }
+
 ```
